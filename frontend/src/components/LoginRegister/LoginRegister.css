@@ -1,0 +1,117 @@
+.container {
+    position: relative;
+    width: 420px;
+    height: 450px;
+    background: transparent;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .4);
+    align-items: center;
+    display: flex;
+    overflow: hidden;
+    transition: height .2s ease; /* transition when click register link */
+}
+
+.container.register {
+    height: 500px;
+}
+
+.container .form-box {
+    width: 100%;
+    padding: 40px;
+}
+
+/* When login link is clicked slide login box into container */
+.container.login .form-box.login {
+    transition: translate .18s ease;
+    translate: 0px;
+}
+
+/* When register link is clicked move login box to the side */
+.container.register .form-box.login {
+    transition: none;
+    translate: -400px;
+}
+
+/* By default register box is out of container */
+.container .form-box.register {
+    position: absolute;
+    transition: none;
+    translate: 400px;
+}
+
+/* When register link is clicked slide register box into container */
+.container.register .form-box.register {
+    transition: translate .18s ease;
+    translate: 0px;
+}
+
+form h1 {
+    font-size: 36px;
+    text-align: center;
+}
+
+form .input-box {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    margin: 30px 0;
+    background: transparent;
+}
+
+.input-box input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    border: 2px solid rgba(5, 5, 5, .2);
+    border-radius: 10px;
+    font-size: 16px;
+    padding: 20px 45px 20px 20px;
+}
+
+.input-box .icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    translate: 0 -50%;
+    font-size: 16px;
+}
+
+form button {
+    width: 100%;
+    height: 45px;
+    background: dodgerblue;
+    border: none;
+    outline: none;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .4);
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    font-weight: 700;
+}
+
+form .register-link {
+    font-size: 14.5px;
+    text-align: center;
+    margin: 20px 0 15px;
+}
+
+.register-link p a {
+    color: dodgerblue;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register-link p a:hover {
+    text-decoration: underline;
+}
+
+.terms {
+    text-align: center;
+    margin: 20px;
+    color: gray;
+    font-weight: 300;
+    font-size: 80%;
+}
