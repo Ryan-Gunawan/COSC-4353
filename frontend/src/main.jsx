@@ -7,7 +7,8 @@ import {
 import './index.css'
 import LoginRegisterPage from './routes/LoginRegisterPage.jsx';
 import HomePage from './routes/HomePage.jsx';
-
+import EventPage from './routes/EventPage.jsx';
+import NewEvent from './routes/NewEvent.jsx';
 
 const router = createBrowserRouter([
   {
@@ -19,7 +20,14 @@ const router = createBrowserRouter([
     element: <HomePage />,
   },
   // Add more routes here for any additional pages
-
+  {
+    path: "event",
+    element: <EventPage />,
+  },
+  {
+    path: "newevent",
+    element: <NewEvent />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
