@@ -1,0 +1,104 @@
+.nav-container {
+  box-sizing: border-box;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  background-color: white;
+  justify-content: space-between;
+  padding: 0 300px;
+}
+
+.nav-container a {
+  text-decoration: none;
+  color: black;
+}
+
+.nav-container .logo a{
+  display: flex;
+  align-items: center;
+  font-size: 28px;
+}
+
+.nav-container .logo img {
+  width: 60px;
+  height: auto;
+}
+
+.nav-container .logo:hover {
+  cursor: pointer;
+}
+
+.nav-container .hamburger {
+  display: none;
+}
+
+.nav-container .navbar ul {
+  display: flex;
+  list-style: none;
+}
+
+.nav-container .navbar ul li a {
+  display: block;
+  font-size: 20px;
+  padding: 10px 25px;
+  border-radius: 50px;
+  transition: 0.2s
+  margin: 0 5px;
+}
+
+.nav-container .navbar ul li a:hover {
+  color: coral
+}
+
+@media only screen and (max-width: 1320px) {
+  .nav-container {
+      padding: 0 50px;
+    }
+}
+
+@media only screen and (max-width: 1100px) {
+  .nav-container {
+      padding: 0 30px;
+    }
+}
+
+@media only screen and (max-width: 900px) {
+  .nav-container .hamburger {
+    display: block;
+    cursor: pointer;
+  }
+  .nav-container .hamburger .line {
+    display: block;
+    width: 30px;
+    height: 3px;
+    margin: 6px 0;
+    background-color: black;
+  }
+  .nav-container .navbar {
+    height: 0px;
+    position: absolute;
+    top: 80px;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    background-color: white;
+    transition: 0.2s;
+    overflow: hidden;
+  }
+  .nav-container .navbar.active {
+    height: 350px;
+  }
+  .nav-container .navbar ul {
+    display: block;
+    width: fit-content;
+    margin: 80px auto 0 auto;
+    text-align: center;
+    transition: 0.5s;
+    opacity: 0;
+  }
+  .nav-container .navbar.active ul {
+    opacity: 1;
+  }
+  .nav-container .navbar ul li a {
+    margin-bottom: 12px;
+}

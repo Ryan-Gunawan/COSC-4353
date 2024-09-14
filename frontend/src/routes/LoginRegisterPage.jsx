@@ -8,7 +8,11 @@ function LoginRegisterPage() {
 
   return (
     <>
-      <LoginRegister />
+      <div className="loginRegisterComponent">
+        <body>
+          <LoginRegister />
+        </body>
+      </div>
     </>
   )
 }
