@@ -1,4 +1,4 @@
-import EventMatch from "/EventMatch.jsx";
+import EventMatch from "./EventMatch.jsx";
 
 function NewEvent() {
 
