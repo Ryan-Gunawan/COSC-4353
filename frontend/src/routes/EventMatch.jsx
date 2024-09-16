@@ -1,4 +1,5 @@
 import React from 'react';
+import Navbar from "../components/Navbar/Navbar"
 
 const PeopleList = () => {
   // Hardcoded people details
@@ -23,6 +24,7 @@ const PeopleList = () => {
   return (
     <div>
       {/* Header banner */}
+      <Navbar />
       <header style={styles.header}>People Directory</header>
 
       {/* People list container */}
