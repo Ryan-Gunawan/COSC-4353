@@ -27,8 +27,9 @@ const EventList = () => {
   return (
     <div>
       {/* Header banner */}
-      <header style={styles.header}>Upcoming Events</header>
       <Navbar />
+      <header style={styles.header}>Upcoming Events</header>
+
 
       {/* Event list container */}
       <ul style={styles.eventList}>
