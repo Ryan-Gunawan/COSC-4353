@@ -9,7 +9,7 @@ import LoginRegisterPage from './routes/LoginRegisterPage.jsx';
 import HomePage from './routes/HomePage.jsx';
 import EventPage from './routes/EventPage.jsx';
 import NewEvent from './routes/NewEvent.jsx';
-import EventMatcher from './routes/EventMatcher.jsx';
+import EventList from './routes/EventList.jsx';
 
 const router = createBrowserRouter([
   {
@@ -30,8 +30,8 @@ const router = createBrowserRouter([
     element: <NewEvent />,
   },
   {
-    path: "eventmatch",
-    element: <EventMatcher />,
+    path: "eventlist",
+    element: <EventList />,
   }
 ]);
 
