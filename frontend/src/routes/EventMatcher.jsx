@@ -1,4 +1,5 @@
 import React from 'react';
+import Navbar from "../components/Navbar/Navbar"
 
 const EventList = () => {
   // Hardcoded event details
@@ -27,6 +28,7 @@ const EventList = () => {
     <div>
       {/* Header banner */}
       <header style={styles.header}>Upcoming Events</header>
+      <Navbar />
 
       {/* Event list container */}
       <ul style={styles.eventList}>
