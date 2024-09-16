@@ -10,6 +10,7 @@ import HomePage from './routes/HomePage.jsx';
 import EventPage from './routes/EventPage.jsx';
 import NewEvent from './routes/NewEvent.jsx';
 import EventList from './routes/EventList.jsx';
+import EventList from './routes/EventMatch.jsx';
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
   {
     path: "eventlist",
     element: <EventList />,
+  },
+  {
+    path: "eventmatch",
+    element: <EventMatch />,
   }
 ]);
 
