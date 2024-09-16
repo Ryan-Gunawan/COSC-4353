@@ -25,7 +25,7 @@ const Navbar = () => {
             <nav className={`navbar ${isActive ? 'active' : ''}`}>
                 <ul>
                     <li><a href="/home/#">Home</a></li>
-                    <li><a href="/home/#">Events</a></li>
+                    <li><a href="/eventlist">Events</a></li>
                     <li><a href="/home/#">About</a></li>
                     <li><a href="/home/#">Profile</a></li>
                 </ul>
