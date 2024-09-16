@@ -1,4 +1,13 @@
+import EventMatch from "/EventMatch.jsx";
+
 function NewEvent() {
+
+  const router = createBrowserRouter([
+  {
+    path: "eventmatch",
+    element: <EventMatch />,
+  }
+]);
 
   return (
     <>
