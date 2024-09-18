@@ -6,6 +6,8 @@
   background-color: white;
   justify-content: space-between;
   padding: 0 300px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 }
 
 .nav-container a {

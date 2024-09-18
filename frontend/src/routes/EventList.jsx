@@ -52,14 +52,17 @@ const styles = {
     color: 'white',
     textAlign: 'center',
     padding: '20px 0',
+    marginLeft: '300px',
+    marginRight: '300px',
     marginBottom: '20px',
-    fontSize: '2em'
+    fontSize: '2em',
+    borderRadius: '10px',
   },
   eventList: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '20px',
-    padding: '0 20px',
+    padding: '0 300px',
     listStyle: 'none',
     margin: 0
   },

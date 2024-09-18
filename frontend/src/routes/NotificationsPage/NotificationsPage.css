@@ -1,0 +1,10 @@
+.NotificationsHeader {
+    text-align: center;
+    font-size: 40px;
+}
+
+.notification-grid {
+    display: grid;
+    place-items: center;
+    gap: 10px;
+}

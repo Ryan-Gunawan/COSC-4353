@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Navbar.css';
+import NotificationBell from '../NotificationBell/NotificationBell';
 import logo from '../Assets/handslogo.jpg'
 
 const Navbar = () => {
@@ -24,13 +25,14 @@ const Navbar = () => {
             </div>
             <nav className={`navbar ${isActive ? 'active' : ''}`}>
                 <ul>
-                    <li><a href="/home/#">Home</a></li>
+                    <li><a href="/home/">Home</a></li>
                     <li><a href="/eventlist">Events</a></li>
-                    <li><a href="/home/#">About</a></li>
-                    <li><a href="/home/#">Profile</a></li>
+                    <li><a href="/home/">About</a></li>
+                    <li><a href="/home/">Profile</a></li>
+                    <li><a href="/notifications/"><NotificationBell /></a></li>
                 </ul>
             </nav>
-        </div>
+        </div >
     );
 };
 export default Navbar;

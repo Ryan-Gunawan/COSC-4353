@@ -1,0 +1,69 @@
+/* Styling for each notification card */
+.notification-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80%; /* Make the card smaller */
+  max-width: 600px; /* Limit the maximum width */
+  padding: 15px;
+  margin: 10px 0;
+  background-color: #fff; /* White background */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow */
+  border: 1px solid #e0e0e0; /* Subtle border */
+}
+
+/* Styling for the content part of the card (left side) */
+.notification-content {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.notification-content h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.notification-content p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Styling for the buttons (right side of the card) */
+.notification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mark-read-btn, .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+/* Button styles */
+.mark-read-btn {
+  background-color: #4CAF50;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.mark-read-btn:hover {
+  background-color: #45a049;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: #e53935;
+}
