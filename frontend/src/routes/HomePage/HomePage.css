@@ -1,0 +1,33 @@
+.hero-container {
+  position: relative;
+  width: calc(100% - 600px); /* Full width minus 300px on each side */
+  height: 100vh; /* Full viewport height */
+  margin: 0 auto; /* Center the hero container */
+  background-image: url('../../components/Assets/heroimage.jpg'); /* Replace with your image */
+  background-size: contain; /* Ensure the entire image is visible */
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center; /* Center content horizontally */
+}
+
+.hero-title {
+  font-size: 3rem; /* Large headline */
+  margin-bottom: 20px;
+}
+
+.hero-button {
+  background-color: #ff7c35;
+  color: white;
+  border: none;
+  width: 250px;
+  height: 80px;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.hero-button:hover {
+    filter: brightness(85%); /* Darken button color */
+}

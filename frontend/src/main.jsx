@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import './index.css'
 import LoginRegisterPage from './routes/LoginRegisterPage.jsx';
-import HomePage from './routes/HomePage.jsx';
+import HomePage from './routes/HomePage/HomePage.jsx';
 import EventPage from './routes/EventPage.jsx';
 import NewEvent from './routes/NewEvent.jsx';
 import EventList from './routes/EventList.jsx';

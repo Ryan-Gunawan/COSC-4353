@@ -48,7 +48,7 @@ const EventList = () => {
 
 const styles = {
   header: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#009692',
     color: 'white',
     textAlign: 'center',
     padding: '20px 0',
