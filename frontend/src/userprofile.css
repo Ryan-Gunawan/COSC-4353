@@ -1,0 +1,52 @@
+.centered-square{
+    display: flex;
+    width: 700px;
+    border-radius: 15px;
+    box-shadow: 3px 3px 8px 3px #45b6fe;
+    background-color: white;
+    padding: 30px;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+/* .info-form{
+    display: flex;
+    flex-direction: column;
+    font-size: 20px;
+} */
+
+.required{
+    color: red;
+    font-size: 15px;
+}
+
+.instruction{
+    font-style: italic;
+    font-size: 20px;
+
+}
+
+.pad-10{
+    padding: 10px;
+}
+
+.inputbox{
+    border-radius: 10px;
+    padding: 15px;
+    width: 600px;
+    height: 30px;
+}
+
+.state-box{
+    border-radius: 10px;
+    padding: 5px;
+    width: 600px;
+    height: 30px;
+}
+
+.selectbox{
+    border-radius: 10px;
+    width: 600px;
+    height: 100px;
+    border-style: solid;
+}

@@ -9,6 +9,7 @@ import LoginRegisterPage from './routes/LoginRegisterPage.jsx';
 import HomePage from './routes/HomePage.jsx';
 import EventPage from './routes/EventPage.jsx';
 import NewEvent from './routes/NewEvent.jsx';
+import UserProfile from './routes/UserProfile.jsx';
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
   {
     path: "newevent",
     element: <NewEvent />,
+  },
+  {
+    path: "userprofile",
+    element: <UserProfile />,
   }
 ]);
 
