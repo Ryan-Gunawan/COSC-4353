@@ -1,53 +1,33 @@
 import React, { useState } from 'react';
 import Navbar from "../components/Navbar/Navbar"
+import Footer from '../components/Footer/Footer';
 
 const PeopleEventMatcher = () => {
- // Hardcoded people details
- const people = [
-  {
-    name: "John Doe",
-    location: "New York, NY",
-    skills: ["JavaScript", "React", "Node.js", "Patience"]
-  },
-  {
-    name: "Jane Smith",
-    location: "San Francisco, CA",
-    skills: ["Python", "Data Science", "Machine Learning", "Communication"]
-  },
-  {
-    name: "Alice Johnson",
-    location: "Austin, TX",
-    skills: ["UI/UX Design", "Figma", "Adobe XD", "Communication", "Patience"]
-  }
-];
+  // Hardcoded people details
+  const people = [
+    {
+      name: "John Doe",
+      location: "New York, NY",
+      skills: ["JavaScript", "React", "Node.js"]
+    },
+    {
+      name: "Jane Smith",
+      location: "San Francisco, CA",
+      skills: ["Python", "Data Science", "Machine Learning"]
+    },
+    {
+      name: "Alice Johnson",
+      location: "Austin, TX",
+      skills: ["UI/UX Design", "Figma", "Adobe XD"]
+    }
+  ];
 
-// Hardcoded event details
-const events = [
-  {
-    eventName: "Tech Conference 2024",
-    description: "Join us for a day of insightful talks and networking with industry leaders in technology.",
-    location: "San Francisco, CA",
-    skills: ["JavaScript", "React"],
-    urgency: "High",
-    eventDate: "2024-10-15"
-  },
-  {
-    eventName: "Music Festival",
-    description: "A weekend filled with live music performances from top artists around the world.",
-    location: "Austin, TX",
-    skills: ["Patience", "Communication"],
-    urgency: "Low",
-    eventDate: "2024-09-25"
-  },
-  {
-    eventName: "Startup Pitch Night",
-    description: "Watch innovative startups pitch their ideas to investors and compete for prizes.",
-    location: "New York, NY",
-    skills: ["Presentation", "Communication"],
-    urgency: "Medium",
-    eventDate: "2024-11-05"
-  }
-];
+  // Hardcoded event names
+  const events = [
+    "Tech Conference 2024",
+    "Music Festival",
+    "Startup Pitch Night"
+  ];
 
   // State to store selected event for each person
   const [selectedEvents, setSelectedEvents] = useState({});
@@ -60,82 +40,50 @@ const events = [
     }));
   };
 
-    // Function to check if the person has the required skills for the selected event
-    const hasRequiredSkills = (personSkills, eventSkills) => {
-      return eventSkills.every(skill => personSkills.includes(skill));
-    };
-
   // Handle confirm button click
   const handleConfirm = (personName) => {
-    const selectedEventName = selectedEvents[personName];
-    const selectedEvent = events.find(event => event.eventName === selectedEventName);
-    const person = people.find(p => p.name === personName);
-
-    if (selectedEvent && person) {
-      const isMatch = hasRequiredSkills(person.skills, selectedEvent.skills);
-      
-      if (isMatch) {
-        alert(`${personName} is successfully matched with ${selectedEvent.eventName}!`);
-      } else {
-        alert(`${personName} does not have the required skills for ${selectedEvent.eventName}.`);
-      }
-    }
+    alert(`${personName} is matched with ${selectedEvents[personName]}`);
   };
 
   return (
-    <div>
+    <div className="page-container">
       {/* Header banner */}
       <Navbar />
       <header style={styles.header}>People & Event Matcher</header>
 
-      {/* People list container */}
-      <ul style={styles.peopleList}>
-        {people.map((person, index) => (
-          <li key={index} style={styles.personItem}>
-            <h2>{person.name}</h2>
-            <p><strong>Location:</strong> {person.location}</p>
-            <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
+      <main className="main-content">
+        {/* People list container */}
+        <ul style={styles.peopleList}>
+          {people.map((person, index) => (
+            <li key={index} style={styles.personItem}>
+              <h2>{person.name}</h2>
+              <p><strong>Location:</strong> {person.location}</p>
+              <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
 
-            {/* Dropdown for event selection */}
-            <select 
-              onChange={(e) => handleEventChange(person.name, e.target.value)}
-              style={styles.dropdown}
-            >
-              <option value="">Select an event</option>
-              {events.map((event, idx) => (
-                <option 
-                  key={idx} 
-                  value={event.eventName}
-                  title={`Skills required: ${event.skills.join(', ')}`}  // Tooltip with required skills
-                >
-                  {event.eventName}
-                </option>
-              ))}
-            </select>
+              {/* Dropdown for event selection */}
+              <select
+                onChange={(e) => handleEventChange(person.name, e.target.value)}
+                style={styles.dropdown}
+              >
+                <option value="">Select an event</option>
+                {events.map((event, idx) => (
+                  <option key={idx} value={event}>{event}</option>
+                ))}
+              </select>
 
-            {/* Confirm button */}
-            <button 
-              onClick={() => handleConfirm(person.name)} 
-              style={styles.button}
-              disabled={!selectedEvents[person.name]} // Disable if no event selected
-            >
-              Confirm Match
-            </button>
-          </li>
-        ))}
-      </ul>
-      <footer className="footer">
-        <div className="footer-content">
-          <p>&copy; 2024 VolunteerMatch. All rights reserved.</p>
-          <p>Don&apos;t contact us: info@volunteermatch.org</p>
-          <p>Don&apos;t follow us on social media:</p>
-          <div className="social-links">
-            <a href="#">Facebook</a>
-            <a href="#">Twitter</a>
-            <a href="#">Instagram</a>
-          </div>
-          </div>
-          </footer>
+              {/* Confirm button */}
+              <button
+                onClick={() => handleConfirm(person.name)}
+                style={styles.button}
+                disabled={!selectedEvents[person.name]} // Disable if no event selected
+              >
+                Confirm Match
+              </button>
+            </li>
+          ))}
+        </ul>
+      </main>
+      <Footer />
     </div>
   );
 };
@@ -180,13 +128,6 @@ const styles = {
     color: 'white',
     border: 'none',
     cursor: 'pointer'
-  },
-  footer: {
-    backgroundColor: '#333',
-    color: 'white',
-    textAlign: 'center',
-    padding: '15px 0',
-    marginTop: 'auto'  // Pushes the footer to the bottom of the page
   }
 };
 

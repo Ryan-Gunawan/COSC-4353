@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from "../components/Navbar/Navbar"
+import Footer from "../components/Footer/Footer"
 
 const EventList = () => {
   // Hardcoded event details
@@ -25,35 +26,26 @@ const EventList = () => {
   ];
 
   return (
-    <div>
+    <div className="page-container">
       {/* Header banner */}
       <Navbar />
       <header style={styles.header}>Upcoming Events</header>
 
+      <main className="main-content">
+        {/* Event list container */}
+        <ul style={styles.eventList}>
+          {events.map((event, index) => (
+            <li key={index} style={styles.eventItem}>
+              <h2>{event.name}</h2>
+              <p><strong>Date:</strong> {event.date}</p>
+              <p><strong>Location:</strong> {event.location}</p>
+              <p>{event.description}</p>
+            </li>
+          ))}
+        </ul>
+      </main>
 
-      {/* Event list container */}
-      <ul style={styles.eventList}>
-        {events.map((event, index) => (
-          <li key={index} style={styles.eventItem}>
-            <h2>{event.name}</h2>
-            <p><strong>Date:</strong> {event.date}</p>
-            <p><strong>Location:</strong> {event.location}</p>
-            <p>{event.description}</p>
-          </li>
-        ))}
-      </ul>
-      <footer className="footer">
-        <div className="footer-content">
-          <p>&copy; 2024 VolunteerMatch. All rights reserved.</p>
-          <p>Don&apos;t contact us: info@volunteermatch.org</p>
-          <p>Don&apos;t follow us on social media:</p>
-          <div className="social-links">
-            <a href="#">Facebook</a>
-            <a href="#">Twitter</a>
-            <a href="#">Instagram</a>
-          </div>
-          </div>
-          </footer>
+      <Footer />
     </div>
   );
 };
@@ -85,13 +77,6 @@ const styles = {
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.2s',
     textAlign: 'left'
-  },
-  footer: {
-    backgroundColor: '#333',
-    color: 'white',
-    textAlign: 'center',
-    padding: '15px 0',
-    marginTop: 'auto'  // Pushes the footer to the bottom of the page
   }
 };
 

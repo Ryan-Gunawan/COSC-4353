@@ -2,6 +2,7 @@ import { useState } from "react";
 import Navbar from "../../components/Navbar/Navbar"
 import './NotificationsPage.css'
 import NotificationGrid from "../../components/NotificationGrid/NotificationGrid";
+import Footer from ".././../components/Footer/Footer"
 
 function NotificationsPage() {
 
@@ -9,13 +10,17 @@ function NotificationsPage() {
 
   return (
     <>
-      <header>
-        <Navbar />
-        <h1 className="NotificationsHeader">Notifications</h1>
-      </header>
+      <div className="page-container">
+        <header>
+          <Navbar />
+        </header>
 
-      <div className="NotificationDiv">
-        <NotificationGrid />
+        <main className="main-content">
+          <h1 className="NotificationsHeader">Notifications</h1>
+          <NotificationGrid />
+        </main>
+
+        <Footer />
       </div>
     </>
   )
