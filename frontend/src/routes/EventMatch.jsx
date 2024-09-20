@@ -170,13 +170,6 @@ const styles = {
     color: 'white',
     border: 'none',
     cursor: 'pointer'
-  },
-  footer: {
-    backgroundColor: '#333',
-    color: 'white',
-    textAlign: 'center',
-    padding: '15px 0',
-    marginTop: 'auto'  // Pushes the footer to the bottom of the page
   }
 };
 
