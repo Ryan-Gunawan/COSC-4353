@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from "../components/Navbar/Navbar"
-import Footer from "../components/Footer/Footer"
+import Footer from '../components/Footer/Footer';
 
 const EventList = () => {
   // Hardcoded event details
@@ -26,25 +26,23 @@ const EventList = () => {
   ];
 
   return (
-    <div className="page-container">
+    <div>
       {/* Header banner */}
       <Navbar />
       <header style={styles.header}>Upcoming Events</header>
 
-      <main className="main-content">
-        {/* Event list container */}
-        <ul style={styles.eventList}>
-          {events.map((event, index) => (
-            <li key={index} style={styles.eventItem}>
-              <h2>{event.name}</h2>
-              <p><strong>Date:</strong> {event.date}</p>
-              <p><strong>Location:</strong> {event.location}</p>
-              <p>{event.description}</p>
-            </li>
-          ))}
-        </ul>
-      </main>
 
+      {/* Event list container */}
+      <ul style={styles.eventList}>
+        {events.map((event, index) => (
+          <li key={index} style={styles.eventItem}>
+            <h2>{event.name}</h2>
+            <p><strong>Date:</strong> {event.date}</p>
+            <p><strong>Location:</strong> {event.location}</p>
+            <p>{event.description}</p>
+          </li>
+        ))}
+      </ul>
       <Footer />
     </div>
   );
