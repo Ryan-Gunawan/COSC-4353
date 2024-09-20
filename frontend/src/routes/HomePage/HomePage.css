@@ -1,0 +1,205 @@
+.homeMain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 15%;
+  margin-right: 15%;
+}
+
+
+.hero {
+  position: relative;
+  background-color: black;
+  background: linear-gradient( rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4) ), url('../../components/Assets/heroimage.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center 40%;
+  padding-top: 250px;
+  padding-bottom: 250px;
+  color: white;
+  width: 100%;
+
+}
+
+.hero-container {
+  display: flex;
+  justify-content: right;
+  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  height: 50%;
+}
+
+.hero-title {
+  font-size: 3rem; /* Large headline */
+  margin-bottom: 20px;
+}
+
+.hero-button-container {
+  display: flex;
+
+}
+
+.hero-button {
+  background-color: #ff7c35;
+  color: white;
+  border: none;
+  padding: 18px 25px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.hero-button:hover {
+    filter: brightness(85%); /* Darken button color */
+}
+
+.how-it-works {
+  padding: 50px 0;
+  text-align: center;
+}
+
+.home-banner {
+    background-color: #009692;
+    color: white;
+    padding: 20px 0;
+    margin-top: 40px;
+    font-size: 2em;
+    border-radius: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.how-it-works h2 {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-between; /* Use space-between to fit steps closer together */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 10px; /* Smaller gap between steps */
+}
+
+.step {
+  flex: 1; /* Allow each step to grow equally */
+  min-width: 200px; /* Minimum width to maintain readability */
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.step h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.step a {
+  color: #4CAF50;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.step a:hover {
+  text-decoration: underline;
+}
+
+.step p {
+  font-size: 1rem;
+  color: #555;
+}
+
+.benefits {
+  padding: 50px 0;
+  text-align: center;
+}
+
+.benefits h2 {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+}
+
+.benefits-container {
+  display: flex;
+  justify-content: space-between; /* Space benefits evenly */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 20px; /* Space between benefits */
+}
+
+.benefit {
+  flex: 1; /* Allow each benefit to grow equally */
+  min-width: 250px; /* Minimum width for readability */
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.benefit h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.benefit p {
+  font-size: 1rem;
+  color: #555;
+}
+
+.footer {
+  background-color: white;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); /* Slight shadow at the top */
+  padding: 20px;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 1200px; /* Optional: Limit width */
+  margin: 0 auto; /* Center the content */
+}
+
+.footer p {
+  margin: 5px 0; /* Space between paragraphs */
+  color: #555;
+}
+
+.social-links {
+  margin-top: 10px;
+}
+
+.social-links a {
+  margin: 0 10px;
+  text-decoration: none;
+  color: #4CAF50; /* Green color for links */
+}
+
+.social-links a:hover {
+  text-decoration: underline;
+}
+
+
+@media (max-width: 900px) {
+  .step {
+    min-width: 45%; /* Adjust min width on medium screens */
+  }
+  .benefit {
+    min-width: 45%; /* Adjust min width on medium screens */
+  }
+}
+
+@media (max-width: 600px) {
+  .step {
+    width: 100%; /* Stack steps vertically on small screens */
+  }
+  .benefit {
+    width: 100%; /* Stack benefits vertically on small screens */
+  }
+}
