@@ -27,15 +27,15 @@ function HomePage() {
           <h2>How It Works</h2>
           <div className="steps-container">
             <div className="step">
-              <h3>Step 1: <a href="#">Sign Up</a></h3>
+              <h3>Step 1: <a href="/">Sign Up</a></h3>
               <p>Create an account and get started as a volunteer.</p>
             </div>
             <div className="step">
-              <h3>Step 2: Set up your <a href="#">Profile</a></h3>
+              <h3>Step 2: Set up your <a href="/userprofile">Profile</a></h3>
               <p>Tell us more about your skills and interests to get personalized matches.</p>
             </div>
             <div className="step">
-              <h3>Step 3: Get Matched to an <a href="#">Event</a></h3>
+              <h3>Step 3: Get Matched to an <a href="/eventlist">Event</a></h3>
               <p>We will match you to events that suit your skills and preferences.</p>
             </div>
           </div>

@@ -27,8 +27,8 @@ const Navbar = () => {
                 <ul>
                     <li><a href="/home/">Home</a></li>
                     <li><a href="/eventlist">Events</a></li>
-                    <li><a href="/home/">About</a></li>
-                    <li><a href="/home/">Profile</a></li>
+                    <li><a href="/volunteerhistory/">History</a></li>
+                    <li><a href="/userprofile/">Profile</a></li>
                     <li><a href="/notifications/"><NotificationBell /></a></li>
                 </ul>
             </nav>
