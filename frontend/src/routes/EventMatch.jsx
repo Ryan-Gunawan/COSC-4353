@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from "../components/Navbar/Navbar"
 
-const PeopleList = () => {
+const PeopleEventMatcher = () => {
   // Hardcoded people details
   const people = [
     {
@@ -21,11 +21,34 @@ const PeopleList = () => {
     }
   ];
 
+  // Hardcoded event names
+  const events = [
+    "Tech Conference 2024",
+    "Music Festival",
+    "Startup Pitch Night"
+  ];
+
+  // State to store selected event for each person
+  const [selectedEvents, setSelectedEvents] = useState({});
+
+  // Handle event selection
+  const handleEventChange = (personName, eventName) => {
+    setSelectedEvents(prev => ({
+      ...prev,
+      [personName]: eventName
+    }));
+  };
+
+  // Handle confirm button click
+  const handleConfirm = (personName) => {
+    alert(`${personName} is matched with ${selectedEvents[personName]}`);
+  };
+
   return (
     <div>
       {/* Header banner */}
       <Navbar />
-      <header style={styles.header}>People Directory</header>
+      <header style={styles.header}>People & Event Matcher</header>
 
       {/* People list container */}
       <ul style={styles.peopleList}>
@@ -34,6 +57,26 @@ const PeopleList = () => {
             <h2>{person.name}</h2>
             <p><strong>Location:</strong> {person.location}</p>
             <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
+
+            {/* Dropdown for event selection */}
+            <select 
+              onChange={(e) => handleEventChange(person.name, e.target.value)}
+              style={styles.dropdown}
+            >
+              <option value="">Select an event</option>
+              {events.map((event, idx) => (
+                <option key={idx} value={event}>{event}</option>
+              ))}
+            </select>
+
+            {/* Confirm button */}
+            <button 
+              onClick={() => handleConfirm(person.name)} 
+              style={styles.button}
+              disabled={!selectedEvents[person.name]} // Disable if no event selected
+            >
+              Confirm Match
+            </button>
           </li>
         ))}
       </ul>
@@ -41,7 +84,7 @@ const PeopleList = () => {
   );
 };
 
-// Basic inline styles for the component (optional, you can move them to a CSS file)
+// Basic inline styles for the component
 const styles = {
   header: {
     backgroundColor: '#28a745',
@@ -66,7 +109,22 @@ const styles = {
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.2s',
     textAlign: 'left'
+  },
+  dropdown: {
+    marginTop: '10px',
+    padding: '10px',
+    borderRadius: '5px',
+    border: '1px solid #ccc'
+  },
+  button: {
+    marginTop: '10px',
+    padding: '10px',
+    borderRadius: '5px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer'
   }
 };
 
-export default PeopleList;
+export default PeopleEventMatcher;
