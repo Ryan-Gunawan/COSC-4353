@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from "../components/Navbar/Navbar"
+import Footer from '../components/Footer/Footer';
 
 const EventList = () => {
   // Hardcoded event details
@@ -42,18 +43,7 @@ const EventList = () => {
           </li>
         ))}
       </ul>
-      <footer className="footer">
-        <div className="footer-content">
-          <p>&copy; 2024 VolunteerMatch. All rights reserved.</p>
-          <p>Don&apos;t contact us: info@volunteermatch.org</p>
-          <p>Don&apos;t follow us on social media:</p>
-          <div className="social-links">
-            <a href="#">Facebook</a>
-            <a href="#">Twitter</a>
-            <a href="#">Instagram</a>
-          </div>
-          </div>
-          </footer>
+      <Footer />
     </div>
   );
 };
@@ -85,13 +75,6 @@ const styles = {
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.2s',
     textAlign: 'left'
-  },
-  footer: {
-    backgroundColor: '#333',
-    color: 'white',
-    textAlign: 'center',
-    padding: '15px 0',
-    marginTop: 'auto'  // Pushes the footer to the bottom of the page
   }
 };
 
