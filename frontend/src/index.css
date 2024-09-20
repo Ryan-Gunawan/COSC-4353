@@ -10,3 +10,15 @@ body {
   background-color: #f2f4f5;
   margin: 0;
 }
+
+/* Makes the page take up at least the full screen */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* pushes footer to bottom */
+.main-content {
+    flex: 1;
+}

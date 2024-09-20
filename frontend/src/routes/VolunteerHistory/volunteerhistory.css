@@ -1,5 +1,6 @@
 .historypage{
     display: flex;
+    margin-bottom: 50px;
 }
 
 .left-col{

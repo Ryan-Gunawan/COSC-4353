@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from "../components/Navbar/Navbar"
+import Footer from '../components/Footer/Footer';
 
 const PeopleEventMatcher = () => {
   // Hardcoded people details
@@ -45,41 +46,44 @@ const PeopleEventMatcher = () => {
   };
 
   return (
-    <div>
+    <div className="page-container">
       {/* Header banner */}
       <Navbar />
       <header style={styles.header}>People & Event Matcher</header>
 
-      {/* People list container */}
-      <ul style={styles.peopleList}>
-        {people.map((person, index) => (
-          <li key={index} style={styles.personItem}>
-            <h2>{person.name}</h2>
-            <p><strong>Location:</strong> {person.location}</p>
-            <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
+      <main className="main-content">
+        {/* People list container */}
+        <ul style={styles.peopleList}>
+          {people.map((person, index) => (
+            <li key={index} style={styles.personItem}>
+              <h2>{person.name}</h2>
+              <p><strong>Location:</strong> {person.location}</p>
+              <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
 
-            {/* Dropdown for event selection */}
-            <select 
-              onChange={(e) => handleEventChange(person.name, e.target.value)}
-              style={styles.dropdown}
-            >
-              <option value="">Select an event</option>
-              {events.map((event, idx) => (
-                <option key={idx} value={event}>{event}</option>
-              ))}
-            </select>
+              {/* Dropdown for event selection */}
+              <select
+                onChange={(e) => handleEventChange(person.name, e.target.value)}
+                style={styles.dropdown}
+              >
+                <option value="">Select an event</option>
+                {events.map((event, idx) => (
+                  <option key={idx} value={event}>{event}</option>
+                ))}
+              </select>
 
-            {/* Confirm button */}
-            <button 
-              onClick={() => handleConfirm(person.name)} 
-              style={styles.button}
-              disabled={!selectedEvents[person.name]} // Disable if no event selected
-            >
-              Confirm Match
-            </button>
-          </li>
-        ))}
-      </ul>
+              {/* Confirm button */}
+              <button
+                onClick={() => handleConfirm(person.name)}
+                style={styles.button}
+                disabled={!selectedEvents[person.name]} // Disable if no event selected
+              >
+                Confirm Match
+              </button>
+            </li>
+          ))}
+        </ul>
+      </main>
+      <Footer />
     </div>
   );
 };

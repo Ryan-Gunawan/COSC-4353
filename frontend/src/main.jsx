@@ -24,7 +24,6 @@ const router = createBrowserRouter([
     path: "home",
     element: <HomePage />,
   },
-  // Add more routes here for any additional pages
   {
     path: "event",
     element: <EventPage />,
