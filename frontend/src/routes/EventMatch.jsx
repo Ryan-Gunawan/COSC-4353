@@ -2,31 +2,52 @@ import React, { useState } from 'react';
 import Navbar from "../components/Navbar/Navbar"
 
 const PeopleEventMatcher = () => {
-  // Hardcoded people details
-  const people = [
-    {
-      name: "John Doe",
-      location: "New York, NY",
-      skills: ["JavaScript", "React", "Node.js"]
-    },
-    {
-      name: "Jane Smith",
-      location: "San Francisco, CA",
-      skills: ["Python", "Data Science", "Machine Learning"]
-    },
-    {
-      name: "Alice Johnson",
-      location: "Austin, TX",
-      skills: ["UI/UX Design", "Figma", "Adobe XD"]
-    }
-  ];
+ // Hardcoded people details
+ const people = [
+  {
+    name: "John Doe",
+    location: "New York, NY",
+    skills: ["JavaScript", "React", "Node.js", "Patience"]
+  },
+  {
+    name: "Jane Smith",
+    location: "San Francisco, CA",
+    skills: ["Python", "Data Science", "Machine Learning", "Communication"]
+  },
+  {
+    name: "Alice Johnson",
+    location: "Austin, TX",
+    skills: ["UI/UX Design", "Figma", "Adobe XD", "Communication", "Patience"]
+  }
+];
 
-  // Hardcoded event names
-  const events = [
-    "Tech Conference 2024",
-    "Music Festival",
-    "Startup Pitch Night"
-  ];
+// Hardcoded event details
+const events = [
+  {
+    eventName: "Tech Conference 2024",
+    description: "Join us for a day of insightful talks and networking with industry leaders in technology.",
+    location: "San Francisco, CA",
+    skills: ["JavaScript", "React"],
+    urgency: "High",
+    eventDate: "2024-10-15"
+  },
+  {
+    eventName: "Music Festival",
+    description: "A weekend filled with live music performances from top artists around the world.",
+    location: "Austin, TX",
+    skills: ["Patience", "Communication"],
+    urgency: "Low",
+    eventDate: "2024-09-25"
+  },
+  {
+    eventName: "Startup Pitch Night",
+    description: "Watch innovative startups pitch their ideas to investors and compete for prizes.",
+    location: "New York, NY",
+    skills: ["Presentation", "Communication"],
+    urgency: "Medium",
+    eventDate: "2024-11-05"
+  }
+];
 
   // State to store selected event for each person
   const [selectedEvents, setSelectedEvents] = useState({});
@@ -39,9 +60,26 @@ const PeopleEventMatcher = () => {
     }));
   };
 
+    // Function to check if the person has the required skills for the selected event
+    const hasRequiredSkills = (personSkills, eventSkills) => {
+      return eventSkills.every(skill => personSkills.includes(skill));
+    };
+
   // Handle confirm button click
   const handleConfirm = (personName) => {
-    alert(`${personName} is matched with ${selectedEvents[personName]}`);
+    const selectedEventName = selectedEvents[personName];
+    const selectedEvent = events.find(event => event.eventName === selectedEventName);
+    const person = people.find(p => p.name === personName);
+
+    if (selectedEvent && person) {
+      const isMatch = hasRequiredSkills(person.skills, selectedEvent.skills);
+      
+      if (isMatch) {
+        alert(`${personName} is successfully matched with ${selectedEvent.eventName}!`);
+      } else {
+        alert(`${personName} does not have the required skills for ${selectedEvent.eventName}.`);
+      }
+    }
   };
 
   return (
@@ -65,7 +103,13 @@ const PeopleEventMatcher = () => {
             >
               <option value="">Select an event</option>
               {events.map((event, idx) => (
-                <option key={idx} value={event}>{event}</option>
+                <option 
+                  key={idx} 
+                  value={event.eventName}
+                  title={`Skills required: ${event.skills.join(', ')}`}  // Tooltip with required skills
+                >
+                  {event.eventName}
+                </option>
               ))}
             </select>
 
