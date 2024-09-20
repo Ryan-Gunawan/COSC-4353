@@ -13,6 +13,7 @@ import EventList from './routes/EventList.jsx';
 import EventMatch from './routes/EventMatch.jsx';
 import NotificationsPage from './routes/NotificationsPage/NotificationsPage.jsx';
 import UserProfile from './routes/UserProfile/UserProfile.jsx';
+import VolunteerHistory from './routes/VolunteerHistory/VolunteerHistory.jsx';
 
 const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
   {
     path: "userprofile",
     element: <UserProfile />,
+  },
+  {
+    path: "volunteerhistory",
+    element: <VolunteerHistory />,
   }
 ]);
 
