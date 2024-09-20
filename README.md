@@ -3,7 +3,7 @@ Group 2
 
 How to get the frontend running:
 
-    Just go into frontend directory and do npm run dev.
+    Just go into frontend directory and do npm install then npm run dev.
     Server will be running on http://localhost:3000
     There's currently just some boiler plate front end stuff from React.
 
