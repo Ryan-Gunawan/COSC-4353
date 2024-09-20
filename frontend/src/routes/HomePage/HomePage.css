@@ -44,6 +44,10 @@
 
 }
 
+.hero-button-container a {
+  text-decoration: none;
+}
+
 .hero-button {
   background-color: #ff7c35;
   color: white;

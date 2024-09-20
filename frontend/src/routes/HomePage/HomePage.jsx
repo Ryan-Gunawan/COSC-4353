@@ -15,7 +15,7 @@ function HomePage() {
           <div className="hero-container">
             <h1>Connect with Volunteer Opportunities</h1>
             <div className="hero-button-container">
-              <button className="hero-button">Find Opportunities</button>
+              <a href="/eventlist"><button className="hero-button">Find Opportunities</button></a>
             </div>
           </div>
         </div>
