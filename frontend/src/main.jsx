@@ -8,7 +8,7 @@ import './index.css'
 import LoginRegisterPage from './routes/LoginRegisterPage.jsx';
 import HomePage from './routes/HomePage/HomePage.jsx';
 import EventPage from './routes/EventPage.jsx';
-import NewEvent from './routes/NewEvent.jsx';
+import NewEvent from './routes/NewEvent/NewEvent.jsx';
 import EventList from './routes/EventList.jsx';
 import EventMatch from './routes/EventMatch.jsx';
 import NotificationsPage from './routes/NotificationsPage/NotificationsPage.jsx';
