@@ -2,6 +2,7 @@
 Group 2
 
 How to get the frontend running:
+
 cd into frontend directory and install dependencies:
 
     npm install
