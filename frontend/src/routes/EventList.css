@@ -1,0 +1,22 @@
+.create-event-button-container {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: right;
+  padding-right: 300px;
+}
+
+.create-event-button{
+  background-color: #ff7c35;
+  color: white;
+  border: none;
+  padding: 18px 25px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.create-event-button:hover {
+    filter: brightness(85%); /* Darken button color */
+}

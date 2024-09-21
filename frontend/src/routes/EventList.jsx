@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from "../components/Navbar/Navbar"
 import Footer from '../components/Footer/Footer';
+import './EventList.css'
 
 const EventList = () => {
   // Hardcoded event details
@@ -32,6 +33,9 @@ const EventList = () => {
       <header style={styles.header}>Upcoming Events</header>
 
       <main className="main-content">
+        <div className="create-event-button-container">
+          <a href="/newevent"><button className="create-event-button">Create Event</button></a>
+        </div>
         {/* Event list container */}
         <ul style={styles.eventList}>
           {events.map((event, index) => (
@@ -67,7 +71,6 @@ const styles = {
     gap: '20px',
     padding: '0 300px',
     listStyle: 'none',
-    margin: 0
   },
   eventItem: {
     backgroundColor: 'white',
