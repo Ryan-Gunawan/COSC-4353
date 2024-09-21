@@ -42,35 +42,33 @@ function VolunteerHistory() {
 
   return (
     <div className="page-container">
-      <div>
-        <Navbar />
+      <Navbar />
 
-        <div className="main-content">
-          <div className="historypage">
-            <div className="left-col">
-              <h3>{userInfo.fullName}</h3>
-              <p> {userInfo.city}, {userInfo.state} </p>
-              <p> Amount of Volunteer done: {userInfo.volunteerDone}</p>
-            </div>
-            <div className="right-col">
-              <h2> Volunteer History </h2>
-              {volunteerJobs.map((job, index) => (
-                <div key={index} className="event-card">
-                  <h3>{job.eventName}</h3>
-                  <p><strong>Date:</strong> {job.eventDate}</p>
-                  <p><strong>Description:</strong> {job.description}</p>
-                  <p><strong>Location:</strong> {job.location}</p>
-                  <p><strong>Required Skills:</strong> {job.skills.join(", ")}</p>
-                  <p><strong>Urgency:</strong> {job.urgency}</p>
-                  <p><strong>Status:</strong> {job.eventStatus} </p>
-                  <p><strong></strong></p>
-                </div>
-              ))}
-            </div>
+      <main className="main-content">
+        <div className="historypage">
+          <div className="left-col">
+            <h3>{userInfo.fullName}</h3>
+            <p> {userInfo.city}, {userInfo.state} </p>
+            <p> Amount of Volunteer done: {userInfo.volunteerDone}</p>
+          </div>
+          <div className="right-col">
+            <h2> Volunteer History </h2>
+            {volunteerJobs.map((job, index) => (
+              <div key={index} className="event-card">
+                <h3>{job.eventName}</h3>
+                <p><strong>Date:</strong> {job.eventDate}</p>
+                <p><strong>Description:</strong> {job.description}</p>
+                <p><strong>Location:</strong> {job.location}</p>
+                <p><strong>Required Skills:</strong> {job.skills.join(", ")}</p>
+                <p><strong>Urgency:</strong> {job.urgency}</p>
+                <p><strong>Status:</strong> {job.eventStatus} </p>
+                <p><strong></strong></p>
+              </div>
+            ))}
           </div>
         </div>
-        <Footer />
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 };
