@@ -133,8 +133,8 @@ const EventList = () => {
                 <p><strong>Date:</strong> {event.date}</p>
                 <p><strong>Location:</strong> {event.location}</p>
                 <p>{event.description}</p>
-                <button onClick={() => editEvent(event)}>Edit</button>
-                <button onClick={() => deleteEvent(event.id)}>Delete</button>
+                <button onClick={() => editEvent(event)} style={styles.editButton}>Edit</button>
+                <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button>
               </div>
             )}
           </li>
@@ -172,6 +172,25 @@ const styles = {
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.2s',
     textAlign: 'left'
+  },
+    editButton: {
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '20px',
+    cursor: 'pointer',
+    marginRight: '10px',
+    fontSize: '1em'
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '20px',
+    cursor: 'pointer',
+    fontSize: '1em'
   }
 };
 
