@@ -16,20 +16,62 @@ Server will be running on http://localhost:3000
 
 How to get the backend running:
 
-    Create a python virtual environment in the backend directory.
-    Do pip3 install -r requirements.txt to install dependencies.
+Navigate to the backend directory:
 
-    Now to start the server we first need to set our environment variables.
-    Do export FLASK_APP=app.py
-    and export FLASK_ENV=development
+    cd backend
 
-    then do flask run to run the server.
-    use instead flask run --reload during development so changes are seen automatically.
+Create a virtual environment:
+
+- On Mac/Linux:
+
+    python3 -m venv venv
+
+- On Windows:
+
+    python -m venv venv
+
+Activate the virtual environment:
+
+- On Mac/Linux:
+
+    source venv/bin/activate
+
+- On Windows:
+
+    venv\Scripts\activate
+
+Install the dependencies
+
+- On Mac/Linux:
+
+    pip3 install -r requirements.txt
+
+- On Windows:
+
+    pip install -r requirements.txt
+
+Set our environment variables for the server
+
+- On Mac/Linux:
+
+    export FLASK_APP=app.py
+    export FLASK_ENV=development
+
+- On Windows:
+
+    set FLASK_APP=app.py
+    set FLASK_ENV=development
+
+Run the flask app server
+
+    flask run
+
+- during development so changes are seen automatically.
+
+    flask run --reload 
 
     q + enter closes the server.
 
-    Unix systems use export. If on windows type set instead of export.
-
-    I set up some boiler plate backend to store user information.
-    To see that it's working you can go to the url: http://127.0.0.1:5000/api/users
+I set up some boiler plate backend to store user information.
+To see that it's working you can go to the url: http://127.0.0.1:5000/api/users
 
