@@ -57,9 +57,14 @@ const LoginRegister = () => {
                 body: JSON.stringify(inputs),
             });
 
+            // Gets result from backend. If email and password are valid go to home otherwise send error msg
             const result = await response.json();
-            alert("Login successful");
-            navigate("/home");
+            if (result.success) {
+                navigate("/home");
+                alert("Login successful");
+            } else {
+                alert(result.msg);
+            }
 
         } catch (error) {
             alert("An error has occurred");

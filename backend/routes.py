@@ -42,7 +42,7 @@ def validate_login_email(email):
 # Register validation route
 @app.route("/api/register", methods = ["POST"])
 def register():
-    data = request.json
+    data = request.get_json()
     email = data.get("email")
     password = data.get("password")
 
@@ -62,6 +62,15 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
+    test_email = "test@gmail.com"
+    test_pass = "password"
+
+
+    if (email == test_email and password == test_pass):
+        return jsonify({"success": True, "msg": "Login successful"}), 200
+    else:
+        return jsonify({"success": False, "msg": "Invalid email or password"}), 401
+
     # if email not in db
     # return jsonify({"success": False, "msg": "Email not found"}), 404
 
@@ -70,7 +79,6 @@ def login():
     # else:
     #     return jsonify({"success": False, "msg": "Invalid password"}), 401
 
-    return jsonify({"success": True, "msg": "Login successful"}), 200
 
 @app.route("/api/login", methods = ["GET"])
 def login_users():
