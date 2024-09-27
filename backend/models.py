@@ -11,14 +11,14 @@ class User(db.Model):
     address1 = db.Column(db.String(100), nullable = False)
     address2 = db.Column(db.String(100), nullable = True)
     city = db.Column(db.String(50), nullable = False)
-    city = db.Column(db.String(2), nullable = False)
+    state = db.Column(db.String(2), nullable = False)
     zip = db.Column(db.Integer, nullable = False)
     # skills
     # preferences
     # availability
 
 class Event(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
+   id = db.Column(db.Integer, primary_key = True)
     # description
     # location
     # required_skills
@@ -30,6 +30,6 @@ class Event(db.Model):
 # Probably need to edit to be able to convert any type of object (User or Event)
 def to_json(self):
     return {
-        "id":self.id,
+        "id":self.id
         # continue... later
     }

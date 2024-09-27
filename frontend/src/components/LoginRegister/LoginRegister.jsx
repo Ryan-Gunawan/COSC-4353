@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LoginRegister.css';
 import { FaLock, FaEnvelope } from "react-icons/fa";
 
@@ -8,11 +9,40 @@ const LoginRegister = () => {
 
     const registerLink = () => {
         setAction(' register');
-    }
+    };
 
     const loginLink = () => {
         setAction(' login');
-    }
+    };
+
+    const [inputs, setInputs] = useState({
+        email: "",
+        password: ""
+    });
+
+    const navigate = useNavigate(); // initialize useNavigate to redirect on submit
+
+    const handleSubmit = async (e) => {
+        e.preventDefault(); // prevents page reloading
+
+        try {
+            const response = await fetch("http://localhost:5000/api/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(inputs),
+            });
+
+            const result = await response.json();
+            alert("Registered successfully");
+            navigate("/home");
+
+        } catch (error) {
+            alert("An error has occurred");
+
+        }
+    };
 
     return (
         <div className="loginRegisterComponent">
@@ -38,14 +68,24 @@ const LoginRegister = () => {
                 </div>
 
                 <div className="form-box register">
-                    <form action="">
+                    <form action='' onSubmit={handleSubmit}>
                         <h1>Register</h1>
                         <div className="input-box">
-                            <input type="email" maxLength="254" placeholder="Email" required />
+                            <input type="email"
+                                maxLength="254"
+                                placeholder="Email"
+                                value={inputs.email}
+                                onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
+                                required />
                             <FaEnvelope className="icon" />
                         </div>
                         <div className="input-box">
-                            <input type="password" maxLength="128" placeholder="Password" required />
+                            <input type="password"
+                                maxLength="128"
+                                placeholder="Password"
+                                value={inputs.password}
+                                onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
+                                required />
                             <FaLock className="icon" />
                         </div>
 
