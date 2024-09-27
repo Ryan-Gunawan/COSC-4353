@@ -22,7 +22,7 @@ const LoginRegister = () => {
 
     const navigate = useNavigate(); // initialize useNavigate to redirect on submit
 
-    const handleSubmit = async (e) => {
+    const handleRegisterSubmit = async (e) => {
         e.preventDefault(); // prevents page reloading
 
         try {
@@ -36,6 +36,29 @@ const LoginRegister = () => {
 
             const result = await response.json();
             alert("Registered successfully");
+            navigate("/userprofile");
+
+        } catch (error) {
+            alert("An error has occurred");
+
+        }
+    };
+
+
+    const handleLoginSubmit = async (e) => {
+        e.preventDefault(); // prevents page reloading
+
+        try {
+            const response = await fetch("http://localhost:5000/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(inputs),
+            });
+
+            const result = await response.json();
+            alert("Login successful");
             navigate("/home");
 
         } catch (error) {
@@ -48,14 +71,24 @@ const LoginRegister = () => {
         <div className="loginRegisterComponent">
             <div className={`container${action}`}>
                 <div className="form-box login">
-                    <form action="">
+                    <form action="" onSubmit={handleLoginSubmit}>
                         <h1>Login</h1>
                         <div className="input-box">
-                            <input type="email" maxLength="254" placeholder="Email" required />
+                            <input type="email"
+                                maxLength="254"
+                                placeholder="Email"
+                                value={inputs.email}
+                                onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
+                                required />
                             <FaEnvelope className="icon" />
                         </div>
                         <div className="input-box">
-                            <input type="password" maxLength="128" placeholder="Password" required />
+                            <input type="password"
+                                maxLength="128"
+                                placeholder="Password"
+                                value={inputs.password}
+                                onChange={(e) => setInputs({ ...inputs, password: e.target.value })}
+                                required />
                             <FaLock className="icon" />
                         </div>
 
@@ -68,7 +101,7 @@ const LoginRegister = () => {
                 </div>
 
                 <div className="form-box register">
-                    <form action='' onSubmit={handleSubmit}>
+                    <form action='' onSubmit={handleRegisterSubmit}>
                         <h1>Register</h1>
                         <div className="input-box">
                             <input type="email"

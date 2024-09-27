@@ -16,7 +16,7 @@ def get_users():
 def register_users():
     return "Hello, welcome to register"
 
-
+# Functions to validate registration inputs
 def validate_email(email):
     email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
     # Once we add database, add check that email is not already registered
@@ -25,6 +25,19 @@ def validate_email(email):
 
 def validate_password(password):
     return len(password) > 0 and len(password) <= 128
+
+# Functions to validate login inputs
+def validate_login_email(email):
+    valid = True
+    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+
+    if re.match(email_regex, email) is not None:
+        valid = False
+
+    # if email not in database:
+        # valid = False
+
+    return valid
 
 # Register validation route
 @app.route("/api/register", methods = ["POST"])
@@ -42,3 +55,23 @@ def register():
 
     # if validations pass return success response
     return jsonify({"msg": "Registration successful"}), 200
+
+@app.route("/api/login", methods = ["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    # if email not in db
+    # return jsonify({"success": False, "msg": "Email not found"}), 404
+
+    # if password matches email:
+    #     return jsonify({"success": True, "msg": "Login successful"}), 200
+    # else:
+    #     return jsonify({"success": False, "msg": "Invalid password"}), 401
+
+    return jsonify({"success": True, "msg": "Login successful"}), 200
+
+@app.route("/api/login", methods = ["GET"])
+def login_users():
+    return "Hello, welcome to login"
