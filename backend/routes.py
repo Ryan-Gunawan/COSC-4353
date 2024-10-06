@@ -11,6 +11,12 @@ def get_users():
     result = [user.to_json() for user in users]
     return jsonify(result), 200
 
+@app.route("/api/eventlist", methods = ["GET"])
+def get_events():
+    events = Event.query.all()
+    result = [event.to_json() for event in events]
+    return jsonify(result), 200
+
 # to view
 @app.route("/api/register", methods = ["GET"])
 def register_users():
