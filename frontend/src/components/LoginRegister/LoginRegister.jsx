@@ -57,6 +57,7 @@ const LoginRegister = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(inputs),
+        credentials: 'include' //ensure cookies and sessions are sent
       });
 
       // Gets result from backend. If email and password are valid go to home otherwise send error msg

@@ -1,9 +1,25 @@
 {
-    "user_1": [
-        { "id": 1, "message": "Event assigned: Beach Cleanup", "type": "assignment" },
-        { "id": 2, "message": "Event reminder: Beach Cleanup in 2 days", "type": "reminder" }
+    "1": [
+        {
+            "id": "3",
+            "title": "Assignment",
+            "date": "11-22-67",
+            "message": "Event assigned: Beach Cleanup",
+            "type": "assignment"
+        },
+        {
+            "id": "4",
+            "title": "Reminder",
+            "date": "11-23-67",
+            "message": "Event reminder: Beach Cleanup in 2 days",
+            "type": "reminder"
+        }
     ],
-    "user_2": [
-        { "id": 1, "message": "Event assigned: Food Bank", "type": "assignment" }
+    "2": [
+        {
+            "id": "1",
+            "message": "Event assigned: Food Bank",
+            "type": "assignment"
+        }
     ]
 }

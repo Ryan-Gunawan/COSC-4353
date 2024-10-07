@@ -5,7 +5,6 @@ from models import User, Event
 import re
 import os
 
-app.secret_key = 'secretkey'
 USER_FILE = 'dummy/users.json'
 
 ### Login and Registration Routes and Functions ###
@@ -58,7 +57,7 @@ def add_user(email, password):
 
 # Return the logged in user's ID
 def get_logged_in_user():
-    user_id = session.get('user_id')
+    user_id = session['user_id']
     if user_id:
         return user_id
     else:
@@ -116,7 +115,9 @@ def login():
     # Checks if user exists and if email matches password
     if user is not None:
         if password == user['password']:
+            # session.permanent = True
             session['user_id'] = user['id']
+            print(f"User logged in with ID: {session['user_id']}")
             return jsonify({"success": True, "msg": "Login successful"}), 200
 
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
@@ -134,20 +135,51 @@ def load_notifications():
     with open('dummy/notifications.json', 'r') as file:
         return json.load(file)
 
+# Saves notifs to json file
 def save_notifications(notifications):
-    with open('dummy/notifications.json', 'f') as file:
+    with open('dummy/notifications.json', 'w') as file:
         json.dump(notifications, file, indent=4)
 
-# User notifications page route
-@app.route('/notifications/<user_id>', methods=['GET'])
-def get_notifications(user_id):
+# Get all user notifications
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    #print(request.headers) # Log request headers
+    user_id = session['user_id']
+    print(f"User ID from session: {user_id}")
+    if not user_id:
+        return jsonify({'msg': 'User not logged in'}), 401
     notifications = load_notifications()
     return jsonify(notifications.get(user_id, []))
 
-def delete_notification(user_id, notification_id):
-    notifications  = load_notifications()
+# Delete notifs from json file
+@app.route('/api/notifications', methods=['DELETE'])
+def delete_notification():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'msg': 'User not logged in'}), 401
+
+    data = request.get_json()
+    notification_id = data.get('notification_id')
+
+    if not notification_id:
+        return jsonify({'msg': 'Notification ID is required'}), 400
+
+    notifications = load_notifications()
     user_notifications = notifications.get(user_id, [])
     notifications[user_id] = [n for n in user_notifications if str(n['id']) != notification_id]
-    save_notifications(notifications)
 
+    save_notifications(notifications)
+    return '', 204
+
+# Adds notifications to user
+@app.route('/api/notifications', methods=['POST'])
+def add_notification(user_id):
+    notifications = load_notifications()
+    new_notification = request.json
+    if user_id in notifications:
+        notifications[user_id].append(new_notification)
+    else:
+        notifications[user_id] = [new_notification]
+    save_notifications(notifications)
+    return jsonify(new_notification), 201
 

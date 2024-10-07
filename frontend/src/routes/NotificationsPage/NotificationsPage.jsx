@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Navbar from "../../components/Navbar/Navbar"
 import './NotificationsPage.css'
 import NotificationGrid from "../../components/NotificationGrid/NotificationGrid";
