@@ -17,7 +17,20 @@ def get_users():
     result = [user.to_json() for user in users]
     return jsonify(result), 200
 
-# to view register route
+@app.route("/api/eventlist", methods = ["GET"])
+def get_events():
+    events = Event.query.all()
+    result = [event.to_json() for event in events]
+    #return jsonify(result), 200
+    event_1 = 'Event 1-----zfeahrhu'
+    return jsonify(event_1, result), 200
+
+@app.route("/api/newevent", methods = ["POST"])
+def post_event():
+    data = request.get_json()
+    name = data.get("name")
+    location = data.get("location")
+
 @app.route("/api/register", methods = ["GET"])
 def register_users():
     return "Hello, welcome to register"
