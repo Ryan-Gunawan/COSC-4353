@@ -7,9 +7,9 @@ import {
 import './index.css'
 import LoginRegisterPage from './routes/LoginRegisterPage.jsx';
 import HomePage from './routes/HomePage/HomePage.jsx';
-import EventPage from './routes/EventPage.jsx';
 import NewEvent from './routes/NewEvent/NewEvent.jsx';
-import EventList from './routes/EventList.jsx';
+import SuccessPage from './routes/NewEvent/SuccessPage.jsx';
+import EventList from './routes/EventList/EventList.jsx';
 import EventMatch from './routes/EventMatch.jsx';
 import NotificationsPage from './routes/NotificationsPage/NotificationsPage.jsx';
 import UserProfile from './routes/UserProfile/UserProfile.jsx';
@@ -25,12 +25,12 @@ const router = createBrowserRouter([
     element: <HomePage />,
   },
   {
-    path: "event",
-    element: <EventPage />,
-  },
-  {
     path: "newevent",
     element: <NewEvent />,
+  },
+  {
+    path: "success",
+    element: <SuccessPage />,
   },
   {
     path: "eventlist",

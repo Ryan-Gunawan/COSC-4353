@@ -20,12 +20,12 @@ def get_users():
     return jsonify(result), 200
 
 @app.route("/api/eventlist", methods = ["GET"])
-#def get_events():
-#    events = Event.query.all()
-#    result = [event.to_json() for event in events]
-#    #return jsonify(result), 200
-#    event_1 = 'Event 1-----zfeahrhu'
-#    return jsonify(event_1, result), 200
+def get_events():
+    #events = Event.query.all() This is for when the database is implemented
+    #result = [event.to_json() for event in events]
+    #return jsonify(result), 200
+    events = read_events_from_file()
+    return jsonify(events), 200
 def read_events_from_file():
     if os.path.exists('dummy/events.json'):
         with open('dummy/events.json', 'r') as f:

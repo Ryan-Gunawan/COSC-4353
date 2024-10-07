@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import "./newevent.css";
@@ -12,6 +13,8 @@ function NewEvent() {
     urgency: '1', // default urgency value
     date: ''
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value, type, selectedOptions } = event.target;
@@ -42,7 +45,7 @@ function NewEvent() {
 
       const data = await response.json();
       console.log(data.message);  // Show success message
-
+      navigate('/success');
     } catch (error) {
       console.error('Error submitting form:', error);
     }
