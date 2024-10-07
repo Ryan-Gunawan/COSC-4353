@@ -35,6 +35,19 @@ def add_events_to_file(events):
     with open('dummy/events.json', 'w') as f:
         json.dump(events, f, indent=4)
 
+# This is responsible for editing existing events
+@app.route("/api/eventlist/<int:event_id>", methods=["PUT"])
+def update_event(event_id):
+    data = request.get_json()
+    events = read_events_from_file()
+    for event in events:
+        if event['id'] == event_id:
+            event.update(data)
+            break
+    add_events_to_file(events)
+    return jsonify({"msg": "Event updated successfully"}), 200
+
+
 @app.route("/api/newevent", methods = ["POST"])
 def post_event():
     data = request.get_json()

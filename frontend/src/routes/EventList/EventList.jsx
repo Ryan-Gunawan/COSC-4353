@@ -1,149 +1,153 @@
-import {useState, useEffect} from 'react';
-import Navbar from "../../components/Navbar/Navbar"
+import { useState, useEffect } from 'react';
+import Navbar from "../../components/Navbar/Navbar";
 import Footer from '../../components/Footer/Footer';
-import './EventList.css'
-
+import './EventList.css';
 
 const EventList = () => {
-  // Hardcoded event details as state to allow modifications
   const [events, setEvents] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     date: "",
     location: "",
-    description: ""
+    description: "",
+    urgency: "",
+    skills: [],
   });
 
-  // Fetch events from the backend
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await fetch('http://127.0.0.1:5000/api/eventlist');
         const data = await response.json();
-        setEvents(data);  // Set the fetched events into state
+        setEvents(data);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
     };
     fetchEvents();
   }, []);
-  
-  // Handle input changes for the edit form
+
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: name === 'skills' ? value.split(',').map(skill => skill.trim()) : value,
+    }));
   };
-  
-  // Delete event - set the background red first
+
   const deleteEvent = (id) => {
-    setEvents(events.map(event => 
+    setEvents((prevEvents) => prevEvents.map(event => 
       event.id === id ? { ...event, isDeleting: true } : event
     ));
 
-    // Delay removal to allow the red background effect
     setTimeout(() => {
-      setEvents(events.filter(event => event.id !== id));
-    }, 1000); // 1 second delay before actual deletion
+      setEvents((prevEvents) => prevEvents.filter(event => event.id !== id));
+    }, 1000);
   };
-  
-    // Edit event - populate the form with event data
-    const editEvent = (event) => {
-      setEditingEvent(event.id);
-      setFormData({
-        name: event.name,
-        date: event.date,
-        location: event.location,
-        description: event.description,
-        urgency: event.urgency,
-        skills: event.skills
+
+  const editEvent = (event) => {
+    setEditingEvent(event.id);
+    setFormData({
+      name: event.name,
+      date: event.date,
+      location: event.location,
+      description: event.description,
+      urgency: event.urgency || '',
+      skills: event.skills || [],
+    });
+  };
+
+  const saveEvent = async () => {
+    try {
+      await fetch(`http://127.0.0.1:5000/api/eventlist/${editingEvent}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-    };
-  
-    // Save the edited event
-    const saveEvent = () => {
-      setEvents(events.map(event =>
-        event.id === editingEvent
-          ? { ...event, ...formData }
-          : event
-      ));
+
+      setEvents((prevEvents) =>
+        prevEvents.map(event =>
+          event.id === editingEvent ? { ...event, ...formData } : event
+        )
+      );
       setEditingEvent(null);
-    };
+    } catch (error) {
+      console.error("Error saving event:", error);
+    }
+  };
 
   return (
     <div className="page-container">
-      {/* Header banner */}
       <Navbar />
       <header style={styles.header}>Upcoming Events</header>
-
       <main className="main-content">
         <div className="create-event-button-container">
           <a href="/newevent"><button className="create-event-button">Create Event</button></a>
         </div>
-        {/* Event list container */}
         <ul style={styles.eventList}>
-        {events.map(event => (
-          <li key={event.id} style={styles.eventItem}>
-            {editingEvent === event.id ? (
-              <div>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Event Name"
-                />
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                />
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="Location"
-                />
-                <input
-                  type="text"
-                  name="urgency"
-                  value={formData.urgency}
-                  onChange={handleInputChange}
-                  placeholder="Urgency"
-                />
-                <input
-                  type="text"
-                  name="skills"
-                  value={formData.skills.join(', ')}
-                  onChange={handleInputChange}
-                  placeholder="Skills (comma separated)"
-                />
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Description"
-                />
-                <button onClick={saveEvent}>Save</button>
-              </div>
-            ) : (
-              <div>
-                <h2>{event.name}</h2>
-                <p><strong>Date:</strong> {event.date}</p>
-                <p><strong>Location:</strong> {event.location}</p>
-                <p><strong>Urgency:</strong> {event.urgency ? event.urgency : 'N/A'}</p>
-                <p><strong>Skills preferred:</strong> {Array.isArray(event.skills) ? event.skills.join(', ') : 'N/A'}</p>
-                <p>{event.description}</p>
-                <button onClick={() => editEvent(event)} style={styles.editButton}>Edit</button>
-                <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button>
-              </div>
-            )}
-          </li>
-        ))}
+          {events.map(event => (
+            <li key={event.id} style={styles.eventItem}>
+              {editingEvent === event.id ? (
+                <div>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Event Name"
+                  />
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                  />
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="Location"
+                  />
+                  <input
+                    type="text"
+                    name="urgency"
+                    value={formData.urgency}
+                    onChange={handleInputChange}
+                    placeholder="Urgency"
+                  />
+                  <input
+                    type="text"
+                    name="skills"
+                    value={formData.skills.join(', ')} // This assumes skills is an array
+                    onChange={handleInputChange}
+                    placeholder="Skills (comma separated)"
+                  />
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Description"
+                  />
+                  <button onClick={saveEvent}>Save</button>
+                </div>
+              ) : (
+                <div>
+                  <h2>{event.name}</h2>
+                  <p><strong>Date:</strong> {event.date}</p>
+                  <p><strong>Location:</strong> {event.location}</p>
+                  <p><strong>Urgency:</strong> {event.urgency ? event.urgency : 'N/A'}</p>
+                  <p><strong>Skills preferred:</strong> {Array.isArray(event.skills) ? event.skills.join(', ') : 'N/A'}</p>
+                  <p>{event.description}</p>
+                  <button onClick={() => editEvent(event)} style={styles.editButton}>Edit</button>
+                  <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button>
+                </div>
+              )}
+            </li>
+          ))}
         </ul>
       </main>
       <Footer />
