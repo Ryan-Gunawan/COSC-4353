@@ -6,7 +6,11 @@ app = Flask(__name__)
 CORS(app)
 
 # users.db is the name of the database, can be renamed later.
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///users.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///default.db"
+app.config['SQLALCHEMY_BINDS'] = {
+    'users': 'sqlite:///users.db',
+    'events': 'sqlite:///events.db'
+}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
