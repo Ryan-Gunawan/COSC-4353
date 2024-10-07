@@ -4,6 +4,7 @@ import json
 from models import User, Event
 import re
 import os
+from datetime import datetime
 
 app.secret_key = 'secretkey'
 USER_FILE = 'dummy/users.json'
@@ -19,18 +20,29 @@ def get_users():
     return jsonify(result), 200
 
 @app.route("/api/eventlist", methods = ["GET"])
-def get_events():
-    events = Event.query.all()
-    result = [event.to_json() for event in events]
-    #return jsonify(result), 200
-    event_1 = 'Event 1-----zfeahrhu'
-    return jsonify(event_1, result), 200
+#def get_events():
+#    events = Event.query.all()
+#    result = [event.to_json() for event in events]
+#    #return jsonify(result), 200
+#    event_1 = 'Event 1-----zfeahrhu'
+#    return jsonify(event_1, result), 200
+def read_events_from_file():
+    if os.path.exists('dummy/events.json'):
+        with open('dummy/events.json', 'r') as f:
+            return json.load(f)
+    return [] # Return an empty list if the file does not exist
+def write_events_to_file(events):
+    with open('dummy/events.json', 'w') as f:
+        json.dump(events, f, indent=4)
 
 @app.route("/api/newevent", methods = ["POST"])
 def post_event():
     data = request.get_json()
-    name = data.get("name")
-    location = data.get("location")
+    print(data)
+    events = read_events_from_file()
+    events.append(data)
+    write_events_to_file(events)
+    return jsonify({"msg": "Event created successfully"}), 201
 
 @app.route("/api/register", methods = ["GET"])
 def register_users():
