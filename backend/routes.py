@@ -29,9 +29,9 @@ def get_users():
 def read_events_from_file():
     if os.path.exists('dummy/events.json'):
         with open('dummy/events.json', 'r') as f:
-            return json.load(f)
+            return json.load(f)  # Directly return the loaded list
     return [] # Return an empty list if the file does not exist
-def write_events_to_file(events):
+def add_events_to_file(events):
     with open('dummy/events.json', 'w') as f:
         json.dump(events, f, indent=4)
 
@@ -41,7 +41,7 @@ def post_event():
     print(data)
     events = read_events_from_file()
     events.append(data)
-    write_events_to_file(events)
+    add_events_to_file(events)
     return jsonify({"msg": "Event created successfully"}), 201
 
 @app.route("/api/register", methods = ["GET"])
