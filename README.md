@@ -91,3 +91,16 @@ Run the flask app server
 
 I set up some boiler plate backend to store user information.
 To see that it's working you can go to the url: http://127.0.0.1:5000/api/users
+
+
+***Teddy's note***
+Run the backend server with bash:
+--- cd backend
+--- python -m flask run
+Terminate program to reflect new changes to the code.
+
+For frontend development:
+Activate the virtual environment, which has all the requiremnet installed.
+--- venv\Scripts\activate
+Then in the powershell:
+--- npm run dev
