@@ -4,6 +4,7 @@ import json
 from models import User, Event
 import re
 import os
+from datetime import datetime
 
 USER_FILE = 'dummy/users.json'
 
@@ -19,17 +20,52 @@ def get_users():
 
 @app.route("/api/eventlist", methods = ["GET"])
 def get_events():
-    events = Event.query.all()
-    result = [event.to_json() for event in events]
+    #events = Event.query.all() This is for when the database is implemented
+    #result = [event.to_json() for event in events]
     #return jsonify(result), 200
-    event_1 = 'Event 1-----zfeahrhu'
-    return jsonify(event_1, result), 200
+    events = read_events_from_file()
+    return jsonify(events), 200
+def read_events_from_file():
+    if os.path.exists('dummy/events.json'):
+        with open('dummy/events.json', 'r') as f:
+            return json.load(f)  # Directly return the loaded list
+    return [] # Return an empty list if the file does not exist
+def add_events_to_file(events):
+    with open('dummy/events.json', 'w') as f:
+        json.dump(events, f, indent=4)
+
+# This is responsible for editing existing events
+@app.route("/api/eventlist/<int:event_id>", methods=["PUT"])
+def update_event(event_id):
+    data = request.get_json()
+    events = read_events_from_file()
+    for event in events:
+        if event['id'] == event_id:
+            event.update(data)
+            break
+    add_events_to_file(events)
+    return jsonify({"msg": "Event updated successfully"}), 200
+
+@app.route("/api/eventlist/<int:event_id>", methods=["DELETE"])
+def delete_event(event_id):
+    events = read_events_from_file()
+    event_to_delete = next((event for event in events if event['id'] == event_id), None)
+
+    if event_to_delete is None:
+        return jsonify({"msg": "Event not found"}), 404
+
+    events = [event for event in events if event['id'] != event_id]
+    add_events_to_file(events)
+    return jsonify({"msg": "Event deleted successfully"}), 200
 
 @app.route("/api/newevent", methods = ["POST"])
 def post_event():
     data = request.get_json()
-    name = data.get("name")
-    location = data.get("location")
+    print(data)
+    events = read_events_from_file()
+    events.append(data)
+    add_events_to_file(events)
+    return jsonify({"msg": "Event created successfully"}), 201
 
 @app.route("/api/register", methods = ["GET"])
 def register_users():

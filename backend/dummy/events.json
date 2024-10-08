@@ -1,0 +1,46 @@
+[
+    {
+        "id": 1,
+        "name": "Tech Conference 2024",
+        "date": "2024-10-15",
+        "location": "San Francisco, CA",
+        "description": "Join us for a day of insightful talks and networking with industry leaders in technology."
+    },
+    {
+        "id": 2,
+        "name": "Music Festival",
+        "date": "2024-09-25",
+        "location": "Austin, TX",
+        "description": "A weekend filled with live music performances from top artists around the world."
+    },
+    {
+        "id": 3,
+        "name": "Startup Pitch Night",
+        "date": "2024-11-05",
+        "location": "New York, NY",
+        "description": "Watch innovative startups pitch their ideas to investors and compete for prizes."
+    },
+    {
+        "id": 4,
+        "name": "Helping Teddy with his project",
+        "description": "$3.50 an hour",
+        "location": "Houston",
+        "skills": [
+            "problemsolver"
+        ],
+        "urgency": "3",
+        "date": "2024-10-08T16:33:02"
+    },
+    {
+        "id": 5,
+        "name": "Updated Event Name",
+        "description": "Updated Description",
+        "location": "Updated Location",
+        "skills": [
+            "Skill1",
+            "Skill2"
+        ],
+        "urgency": "High",
+        "date": "2024-10-20"
+    }
+]
