@@ -1,9 +1,10 @@
+import React, { useState, useEffect } from 'react';
 import Navbar from "../../components/Navbar/Navbar"
 import Footer from "../../components/Footer/Footer"
 import "./volunteerhistory.css"
+import "../../../../backend/dummy/history.json"
 
 function VolunteerHistory() {
-
   const userInfo = {
     fullName: "Elon Musk",
     city: "Houston",
@@ -11,34 +12,19 @@ function VolunteerHistory() {
     volunteerDone: 3,
   };
 
-  const volunteerJobs = [
-    {
-      eventName: "Tech Conference 2024",
-      description: "Join us for a day of insightful talks and networking with industry leaders in technology.",
-      location: "San Francisco, CA",
-      skills: ["Teamwork", "Detail Oriented"],
-      urgency: "High",
-      eventDate: "2024-10-15",
-      eventStatus: "On-going",
-    },
-    {
-      eventName: "Music Festival",
-      description: "A weekend filled with live music performances from top artists around the world.",
-      location: "Austin, TX",
-      skills: ["Patience", "Communication"],
-      urgency: "Low",
-      eventDate: "2024-09-25",
-      eventStatus: "Completed",
-    },
-    {
-      eventName: "Startup Pitch Night",
-      description: "Watch innovative startups pitch their ideas to investors and compete for prizes.",
-      location: "New York, NY",
-      skills: ["Leadership", "Teamwork", "Confidence"],
-      urgency: "Intermediate",
-      eventDate: "2024-11-05",
-      eventStatus: "On-going",
-    }];
+  const [volunteerJobs, setVolunteerJobs] = useState([])
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/volunteerHistory');
+        const data = await response.json();
+        setVolunteerJobs(data);
+      } catch (error) {
+        console.error("Error fetching:", error);
+      }
+    };
+    fetchHistory();
+  }, []);
 
   return (
     <div className="page-container">
@@ -51,6 +37,7 @@ function VolunteerHistory() {
             <p> {userInfo.city}, {userInfo.state} </p>
             <p> Amount of Volunteer done: {userInfo.volunteerDone}</p>
           </div>
+
           <div className="right-col">
             <h2> Volunteer History </h2>
             {volunteerJobs.map((job, index) => (

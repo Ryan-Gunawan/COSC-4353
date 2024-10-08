@@ -232,3 +232,10 @@ def add_notification(user_id):
     save_notifications(notifications)
     return jsonify(new_notification), 201
 
+@app.route("/api/volunteerHistory", methods = ["GET"])
+def get_history():
+    history = []
+    if os.path.exists('dummy/history.json'):
+        with open('dummy/history.json', 'r') as f:
+            history = json.load(f)
+    return jsonify(history), 200
