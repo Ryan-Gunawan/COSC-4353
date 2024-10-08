@@ -36,15 +36,30 @@ const EventList = () => {
     }));
   };
 
-  const deleteEvent = (id) => {
-    setEvents((prevEvents) => prevEvents.map(event => 
-      event.id === id ? { ...event, isDeleting: true } : event
-    ));
-
-    setTimeout(() => {
-      setEvents((prevEvents) => prevEvents.filter(event => event.id !== id));
-    }, 1000);
+  const deleteEvent = async (id) => {
+    const confirmed = window.confirm("Are you sure you want to delete this event? It will be permanently deleted.")
+    if(!confirmed) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/eventlist/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.ok) {
+        setEvents((prevEvents) => prevEvents.filter(event => event.id !== id));
+      } else {
+        console.error("Failed to delete event");
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+    }
   };
+  
 
   const editEvent = (event) => {
     setEditingEvent(event.id);
@@ -73,10 +88,14 @@ const EventList = () => {
           event.id === editingEvent ? { ...event, ...formData } : event
         )
       );
-      setEditingEvent(null);
+      setEditingEvent(null);  // Exit edit mode after saving
     } catch (error) {
       console.error("Error saving event:", error);
     }
+  };
+
+  const cancelEdit = () => {
+    setEditingEvent(null);  // Exit edit mode without saving
   };
 
   return (
@@ -91,50 +110,53 @@ const EventList = () => {
           {events.map(event => (
             <li key={event.id} style={styles.eventItem}>
               {editingEvent === event.id ? (
-                <div>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Event Name"
-                  />
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                  />
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    placeholder="Location"
-                  />
-                  <input
-                    type="text"
-                    name="urgency"
-                    value={formData.urgency}
-                    onChange={handleInputChange}
-                    placeholder="Urgency"
-                  />
-                  <input
-                    type="text"
-                    name="skills"
-                    value={formData.skills.join(', ')} // This assumes skills is an array
-                    onChange={handleInputChange}
-                    placeholder="Skills (comma separated)"
-                  />
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Description"
-                  />
-                  <button onClick={saveEvent}>Save</button>
-                </div>
-              ) : (
+                  <div className="edit-container">
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Event Name"
+                    />
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                    />
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      placeholder="Location"
+                    />
+                    <input
+                      type="text"
+                      name="urgency"
+                      value={formData.urgency}
+                      onChange={handleInputChange}
+                      placeholder="Urgency"
+                    />
+                    <input
+                      type="text"
+                      name="skills"
+                      value={formData.skills.join(', ')}
+                      onChange={handleInputChange}
+                      placeholder="Skills (comma separated)"
+                    />
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder="Description"
+                    />
+                    <div className="button-container">
+                      <button onClick={saveEvent} className="save-button">Save</button>
+                      <button onClick={cancelEdit} className="cancel-button">Cancel</button> {/* Return Button */}
+                    </div>
+                  </div>
+                ) : (
                 <div>
                   <h2>{event.name}</h2>
                   <p><strong>Date:</strong> {event.date}</p>
@@ -143,7 +165,7 @@ const EventList = () => {
                   <p><strong>Skills preferred:</strong> {Array.isArray(event.skills) ? event.skills.join(', ') : 'N/A'}</p>
                   <p>{event.description}</p>
                   <button onClick={() => editEvent(event)} style={styles.editButton}>Edit</button>
-                  <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button>
+                  <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button> {/* Delete Button */}
                 </div>
               )}
             </li>
@@ -182,7 +204,7 @@ const styles = {
     transition: 'transform 0.2s',
     textAlign: 'left'
   },
-    editButton: {
+  editButton: {
     backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
@@ -199,6 +221,16 @@ const styles = {
     padding: '10px 20px',
     borderRadius: '20px',
     cursor: 'pointer',
+    fontSize: '1em'
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '20px',
+    cursor: 'pointer',
+    marginLeft: '10px',
     fontSize: '1em'
   }
 };

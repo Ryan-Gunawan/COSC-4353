@@ -47,6 +47,17 @@ def update_event(event_id):
     add_events_to_file(events)
     return jsonify({"msg": "Event updated successfully"}), 200
 
+@app.route("/api/eventlist/<int:event_id>", methods=["DELETE"])
+def delete_event(event_id):
+    events = read_events_from_file()
+    event_to_delete = next((event for event in events if event['id'] == event_id), None)
+
+    if event_to_delete is None:
+        return jsonify({"msg": "Event not found"}), 404
+
+    events = [event for event in events if event['id'] != event_id]
+    add_events_to_file(events)
+    return jsonify({"msg": "Event deleted successfully"}), 200
 
 @app.route("/api/newevent", methods = ["POST"])
 def post_event():
