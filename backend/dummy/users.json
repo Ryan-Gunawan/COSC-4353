@@ -3,32 +3,50 @@
         {
             "id": "1",
             "email": "email@gmail.com",
-            "password": "password"
+            "password": "password",
+            "admin": false
         },
         {
             "id": "2",
             "email": "user2@example.com",
-            "password": "password2"
+            "password": "password2",
+            "admin": false
         },
         {
             "id": 3,
             "email": "email2@yahoo.com",
-            "password": "password3"
+            "password": "password3",
+            "admin": false
         },
         {
             "id": 4,
             "email": "user2@example.com",
-            "password": "password"
+            "password": "password",
+            "admin": false
         },
         {
             "id": 5,
             "email": "user2@example.com",
-            "password": "password"
+            "password": "password",
+            "admin": false
         },
         {
             "id": 6,
             "email": "email3@gmail.com",
-            "password": "password"
+            "password": "password",
+            "admin": false
+        },
+        {
+            "id": 7,
+            "email": "testmain@gmail.com",
+            "password": "password",
+            "admin": false
+        },
+        {
+            "id": "8",
+            "email": "admin@gmail.com",
+            "password": "admin",
+            "admin": true
         }
     ]
 }

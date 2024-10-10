@@ -62,7 +62,8 @@ def add_user(email, password):
     new_user = {
         "id": new_user_id,
         "email": email,
-        "password": password
+        "password": password,
+        "admin": False
     }
     data['users'].append(new_user)
     save_users(data)
@@ -128,9 +129,10 @@ def login():
     # Checks if user exists and if email matches password
     if user is not None:
         if password == user['password']:
-            # session.permanent = True
-            session['user_id'] = user['id']
+            session['user_id'] = user['id'] # Store user ID in session
+            session['admin'] = user['admin'] # Store user admin status in session
             print(f"User logged in with ID: {session['user_id']}")
+            print(f"User logged in with Admin Status: {session['admin']}")
             return jsonify({"success": True, "msg": "Login successful"}), 200
 
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
@@ -139,6 +141,13 @@ def login():
 @app.route("/api/login", methods = ["GET"])
 def login_users():
     return "Hello, welcome to login"
+
+# Route to get session admin status
+@app.route('/api/isadmin', methods=['GET'])
+def is_admin():
+    if 'admin' in session:
+        return jsonify({"admin": session['admin']})
+    return jsonify({"admin": False})
 
 
 ### Notification route and functions ###
