@@ -182,8 +182,10 @@ def login_users():
 @app.route('/api/isadmin', methods=['GET'])
 def is_admin():
     if 'admin' in session:
-        return jsonify({"admin": session['admin']})
-    return jsonify({"admin": False})
+        print(f"User logged in with Admin Status: {session['admin']}")
+        return jsonify({"admin": session['admin']}), 200
+
+    return jsonify({"admin": False}), 200# Default to false if admin is not in session
 
 
 ### Notification route and functions ###

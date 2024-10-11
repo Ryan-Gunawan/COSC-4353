@@ -4,6 +4,7 @@ import Footer from '../../components/Footer/Footer';
 import './EventList.css';
 
 const EventList = () => {
+  const [isAdmin, setIsAdmin] = useState(false);
   const [events, setEvents] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null);
   const [formData, setFormData] = useState({
@@ -16,16 +17,28 @@ const EventList = () => {
   });
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchEventsAndAdminStatus = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/eventlist');
-        const data = await response.json();
-        setEvents(data);
+        // Fetch the event list
+        const eventsResponse = await fetch('http://127.0.0.1:5000/api/eventlist');
+        const eventsData = await eventsResponse.json();
+        setEvents(eventsData);
+
+        // Fetch the admin status of the logged in user
+        // Note that since session keys are set using localhost instead of 127.0.0.1, we need to use localhost here
+        // They're technically the same thing, but if we wanted to use the numerical ip we'd have to change everything to it as well.
+        const adminResponse = await fetch('http://localhost:5000/api/isadmin', {
+          method: 'GET',
+          credentials: 'include', // Include cookies for session
+        });
+        const adminData = await adminResponse.json();
+        setIsAdmin(adminData.admin);
       } catch (error) {
-        console.error("Error fetching events:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    fetchEvents();
+
+    fetchEventsAndAdminStatus();
   }, []);
 
   const handleInputChange = (e) => {
@@ -38,10 +51,10 @@ const EventList = () => {
 
   const deleteEvent = async (id) => {
     const confirmed = window.confirm("Are you sure you want to delete this event? It will be permanently deleted.")
-    if(!confirmed) {
+    if (!confirmed) {
       return;
     }
-    
+
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/eventlist/${id}`, {
         method: 'DELETE',
@@ -49,7 +62,7 @@ const EventList = () => {
           'Content-Type': 'application/json',
         },
       });
-  
+
       if (response.ok) {
         setEvents((prevEvents) => prevEvents.filter(event => event.id !== id));
       } else {
@@ -59,7 +72,7 @@ const EventList = () => {
       console.error("Error deleting event:", error);
     }
   };
-  
+
 
   const editEvent = (event) => {
     setEditingEvent(event.id);
@@ -103,60 +116,64 @@ const EventList = () => {
       <Navbar />
       <header style={styles.header}>Upcoming Events</header>
       <main className="main-content">
+
+        {/* Only show create event button for admins */}
         <div className="create-event-button-container">
-          <a href="/newevent"><button className="create-event-button">Create Event</button></a>
+          {isAdmin && (
+            <a href="/newevent"><button className="create-event-button">Create Event</button></a>
+          )}
         </div>
         <ul style={styles.eventList}>
           {events.map(event => (
             <li key={event.id} style={styles.eventItem}>
               {editingEvent === event.id ? (
-                  <div className="edit-container">
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Event Name"
-                    />
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                    />
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      placeholder="Location"
-                    />
-                    <input
-                      type="text"
-                      name="urgency"
-                      value={formData.urgency}
-                      onChange={handleInputChange}
-                      placeholder="Urgency"
-                    />
-                    <input
-                      type="text"
-                      name="skills"
-                      value={formData.skills.join(', ')}
-                      onChange={handleInputChange}
-                      placeholder="Skills (comma separated)"
-                    />
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      placeholder="Description"
-                    />
-                    <div className="button-container">
-                      <button onClick={saveEvent} className="save-button">Save</button>
-                      <button onClick={cancelEdit} className="cancel-button">Cancel</button> {/* Return Button */}
-                    </div>
+                <div className="edit-container">
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Event Name"
+                  />
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                  />
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="Location"
+                  />
+                  <input
+                    type="text"
+                    name="urgency"
+                    value={formData.urgency}
+                    onChange={handleInputChange}
+                    placeholder="Urgency"
+                  />
+                  <input
+                    type="text"
+                    name="skills"
+                    value={formData.skills.join(', ')}
+                    onChange={handleInputChange}
+                    placeholder="Skills (comma separated)"
+                  />
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Description"
+                  />
+                  <div className="button-container">
+                    <button onClick={saveEvent} className="save-button">Save</button>
+                    <button onClick={cancelEdit} className="cancel-button">Cancel</button> {/* Return Button */}
                   </div>
-                ) : (
+                </div>
+              ) : (
                 <div>
                   <h2>{event.name}</h2>
                   <p><strong>Date:</strong> {event.date}</p>
@@ -164,8 +181,14 @@ const EventList = () => {
                   <p><strong>Urgency:</strong> {event.urgency ? event.urgency : 'N/A'}</p>
                   <p><strong>Skills preferred:</strong> {Array.isArray(event.skills) ? event.skills.join(', ') : 'N/A'}</p>
                   <p>{event.description}</p>
-                  <button onClick={() => editEvent(event)} style={styles.editButton}>Edit</button>
-                  <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button> {/* Delete Button */}
+
+                  {/* Only show edit and delete buttons for admins */}
+                  {isAdmin && (
+                    <div className="button-container">
+                      <button onClick={() => editEvent(event)} style={styles.editButton}>Edit</button>
+                      <button onClick={() => deleteEvent(event.id)} style={styles.deleteButton}>Delete</button> {/* Delete Button */}
+                    </div>
+                  )}
                 </div>
               )}
             </li>
