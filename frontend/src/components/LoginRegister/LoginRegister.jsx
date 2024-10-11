@@ -20,6 +20,8 @@ const LoginRegister = () => {
     password: "",
   });
 
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+
   // Error state for invalid email input
   const [emailError, setEmailError] = useState("");
 
@@ -55,19 +57,23 @@ const LoginRegister = () => {
     debouncedValidateEmail(email);
   };
 
-  // useEffect(() => {
-  //   if (inputs.email !== "") {
-  //     if (!validateEmail(inputs.email)) {
-  //       setEmailError("Invalid email input");
-  //     } else {
-  //       setEmailError("");
-  //     }
-  //   }
-  // }, [inputs.email]); // Run effect when email input changes
+  const handlePasswordChange = (e) => {
+    setInputs((prevState) => ({ ...prevState, password: e.target.value }));
+  }
+
+  useEffect(() => {
+    const isEmailValid = validateEmail(inputs.email);
+    const areInputsFilled = inputs.email !== "" && inputs.password !== "";
+
+    if (!isEmailValid || !areInputsFilled || emailError) {
+      setIsSubmitDisabled(true);
+    } else {
+      setIsSubmitDisabled(false);
+    }
+  }, [inputs, emailError]); // Check validation whenever inputs change
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault(); // prevents page reloading
-
 
     try {
       const response = await fetch("http://localhost:5000/api/register", {
@@ -157,7 +163,7 @@ const LoginRegister = () => {
 
             {loginError && <div className="error-text">{loginError}</div>}
 
-            <button type="submit">Log in</button>
+            <button type="submit" disabled={isSubmitDisabled}>Log in</button>
 
             <div className="register-link">
               <p>
@@ -213,7 +219,7 @@ const LoginRegister = () => {
               <p>By signing up, you agree to our Terms.</p>
             </div>
 
-            <button type="submit">Register</button>
+            <button type="submit" disabled={isSubmitDisabled}>Register</button>
 
             <div className="register-link">
               <p>

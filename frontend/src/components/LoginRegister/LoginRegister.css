@@ -102,6 +102,12 @@
     font-weight: 700;
 }
 
+.loginRegisterComponent form button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 .loginRegisterComponent form .register-link {
     font-size: 14.5px;
     text-align: center;
