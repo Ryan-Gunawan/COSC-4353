@@ -90,11 +90,18 @@ const LoginRegister = () => {
         //alert("Registered successfully");
         navigate("/userprofile");
       }
+      else if (result.msg === "An account with this email already exists") {
+        //alert(result.msg) // show error msg
+        setEmailError("Sorry, an account with this email already exists.");
+        setInputs({ ...inputs, email: "" }); // Reset email input
+      }
       else {
-        alert(result.msg) // show error msg
+        setEmailError("Sorry, there was a registration error.");
+        setInputs({ ...inputs, email: "" }); // Reset email input
       }
     } catch (error) {
       alert("A register error has occurred");
+      setEmailError("Sorry, there was a registration error.");
     }
   };
 
@@ -153,9 +160,7 @@ const LoginRegister = () => {
                 maxLength="128"
                 placeholder="Password"
                 value={inputs.password}
-                onChange={(e) =>
-                  setInputs({ ...inputs, password: e.target.value })
-                }
+                onChange={handlePasswordChange}
                 required
               />
               <FaLock className="icon" />
@@ -206,9 +211,7 @@ const LoginRegister = () => {
                 maxLength="128"
                 placeholder="Password"
                 value={inputs.password}
-                onChange={(e) =>
-                  setInputs({ ...inputs, password: e.target.value })
-                }
+                onChange={handlePasswordChange}
                 required
               />
               <FaLock className="icon" />
