@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import debounce from "lodash.debounce";
 import "./LoginRegister.css";
 import { FaLock, FaEnvelope } from "react-icons/fa";
 
@@ -19,10 +20,33 @@ const LoginRegister = () => {
     password: "",
   });
 
+  // Error state for invalid email input
+  const [emailError, setEmailError] = useState("");
+
+  // Error state for invalid login credentials
+  const [loginError, setLoginError] = useState("");
+
   const navigate = useNavigate(); // initialize useNavigate to redirect on submit
+
+  // Email validation helper function
+  const validateEmail = (email) => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailPattern.test(email);
+  }
+
+  useEffect(() => {
+    if (inputs.email !== "") {
+      if (!validateEmail(inputs.email)) {
+        setEmailError("Invalid email input");
+      } else {
+        setEmailError("");
+      }
+    }
+  }, [inputs.email]); // Run effect when email input changes
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault(); // prevents page reloading
+
 
     try {
       const response = await fetch("http://localhost:5000/api/register", {
@@ -47,6 +71,7 @@ const LoginRegister = () => {
     }
   };
 
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault(); // prevents page reloading
 
@@ -66,9 +91,11 @@ const LoginRegister = () => {
         navigate("/home");
         alert("Login successful");
       } else {
+        setLoginError("Sorry, your email or password was incorrect. Please double-check and try again.")
         alert(result.msg);
       }
     } catch (error) {
+      setLoginError("An error occurred during login");
       alert("A login error has occurred");
     }
   };
@@ -106,6 +133,8 @@ const LoginRegister = () => {
               <FaLock className="icon" />
             </div>
 
+            {loginError && <div className="error-text">{loginError}</div>}
+
             <button type="submit">Log in</button>
 
             <div className="register-link">
@@ -128,9 +157,16 @@ const LoginRegister = () => {
                 maxLength="254"
                 placeholder="Email"
                 value={inputs.email}
-                onChange={(e) =>
-                  setInputs({ ...inputs, email: e.target.value })
-                }
+                onChange={(e) => {
+                  setInputs({ ...inputs, email: e.target.value });
+                  if (validateEmail(e.target.value)) {
+                    setEmailError("Invalid email input");
+                  } else {
+                    setEmailError("");
+                  }
+                  console.log("Email error:", emailError); // check if error updates
+                }}
+                className={emailError ? "input-error" : ""} // adds input error class if email is invalid
                 required
               />
               <FaEnvelope className="icon" />
@@ -148,6 +184,7 @@ const LoginRegister = () => {
               />
               <FaLock className="icon" />
             </div>
+            {emailError && <p className="error-text">{emailError}</p>}
 
             <div className="terms">
               <p>By signing up, you agree to our Terms.</p>
