@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import "./LoginRegister.css";
@@ -34,15 +34,36 @@ const LoginRegister = () => {
     return emailPattern.test(email);
   }
 
-  useEffect(() => {
-    if (inputs.email !== "") {
-      if (!validateEmail(inputs.email)) {
-        setEmailError("Invalid email input");
-      } else {
-        setEmailError("");
+  // Debounce the validation function
+  const debouncedValidateEmail = useCallback(
+    debounce((email) => {
+      if (email !== "") {
+        if (!validateEmail(email)) {
+          setEmailError("Invalid email");
+        } else {
+          setEmailError("");
+        }
       }
-    }
-  }, [inputs.email]); // Run effect when email input changes
+    }, 300),
+    []
+  );
+
+  // Update email state and trigger debounced validation
+  const handleEmailChange = (e) => {
+    const email = e.target.value;
+    setInputs((prevState) => ({ ...prevState, email }));
+    debouncedValidateEmail(email);
+  };
+
+  // useEffect(() => {
+  //   if (inputs.email !== "") {
+  //     if (!validateEmail(inputs.email)) {
+  //       setEmailError("Invalid email input");
+  //     } else {
+  //       setEmailError("");
+  //     }
+  //   }
+  // }, [inputs.email]); // Run effect when email input changes
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault(); // prevents page reloading
@@ -89,14 +110,14 @@ const LoginRegister = () => {
       const result = await response.json();
       if (result.success) {
         navigate("/home");
-        alert("Login successful");
+        // alert("Login successful");
       } else {
         setLoginError("Sorry, your email or password was incorrect. Please double-check and try again.")
-        alert(result.msg);
+        // alert(result.msg);
       }
     } catch (error) {
       setLoginError("An error occurred during login");
-      alert("A login error has occurred");
+      // alert("A login error has occurred");
     }
   };
 
@@ -112,9 +133,10 @@ const LoginRegister = () => {
                 maxLength="254"
                 placeholder="Email"
                 value={inputs.email}
-                onChange={(e) =>
-                  setInputs({ ...inputs, email: e.target.value })
-                }
+                // onChange={(e) =>
+                //   setInputs({ ...inputs, email: e.target.value })
+                // }
+                onChange={handleEmailChange} // Debounced email change handler
                 required
               />
               <FaEnvelope className="icon" />
@@ -157,15 +179,16 @@ const LoginRegister = () => {
                 maxLength="254"
                 placeholder="Email"
                 value={inputs.email}
-                onChange={(e) => {
-                  setInputs({ ...inputs, email: e.target.value });
-                  if (validateEmail(e.target.value)) {
-                    setEmailError("Invalid email input");
-                  } else {
-                    setEmailError("");
-                  }
-                  console.log("Email error:", emailError); // check if error updates
-                }}
+                // onChange={(e) => {
+                //   setInputs({ ...inputs, email: e.target.value });
+                //   if (validateEmail(e.target.value)) {
+                //     setEmailError("Invalid email input");
+                //   } else {
+                //     setEmailError("");
+                //   }
+                //   console.log("Email error:", emailError); // check if error updates
+                // }}
+                onChange={handleEmailChange} // Debounced email change handler
                 className={emailError ? "input-error" : ""} // adds input error class if email is invalid
                 required
               />
