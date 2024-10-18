@@ -244,16 +244,17 @@ def delete_notification():
     return jsonify({'msg': 'Notification deleted successfully'}), 204
 
 # # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
-# @app.route('/api/notifications/checkunread', methods=['GET'])
-# def notify_unread_notification():
-#     user_id = session.get('user_id')
-#     notifications = load_notifications()
-#     user_notifications = notifications.get(user_id, [])
-#     has_unread = any(notification['read'] == False for notification in user_notifications)
-#     if has_unread:
-#         socketio.emit('unread_notification', {'has_unread': True})
-#     else:
-#         socketio.emit('unread_notification', {'has_unread': False})
+@app.route('/api/notifications/unread', methods=['GET'])
+def check_unread_notification():
+    user_id = session.get('user_id')
+    notifications = load_notifications()
+    user_notifications = notifications.get(user_id, [])
+    has_unread = any(notification['read'] == False for notification in user_notifications)
+    return jsonify({'has_unread': has_unread})
+    # if has_unread:
+    #     socketio.emit('unread_notification', {'has_unread': True})
+    # else:
+    #     socketio.emit('unread_notification', {'has_unread': False})
 
 
 # Send event assignment notification
@@ -353,6 +354,10 @@ def get_history():
             history = json.load(f)
     return jsonify(history), 200
 
+@socketio.on('connect')
+def handle_connect():
+    print('socketio client connected')
 
-# if __name__ == "__main__":
-#     socketio.run(app)
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('socketio client disconnected')
