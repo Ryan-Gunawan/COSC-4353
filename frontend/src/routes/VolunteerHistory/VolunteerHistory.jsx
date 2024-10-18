@@ -4,12 +4,26 @@ import Footer from "../../components/Footer/Footer"
 import "./volunteerhistory.css"
 
 function VolunteerHistory() {
-  const userInfo = {
-    fullName: "Elon Musk",
-    city: "Houston",
-    state: "TX",
-    volunteerDone: 3,
-  };
+
+  const [userInfo, setUserInfo] = useState([])
+  useEffect(() => {
+      fetch("http://127.0.0.1:5000/api/userprofile", {
+          method: 'GET',
+          credentials: 'include',
+      })
+          .then(response => {
+              if (!response.ok) {
+                  console.error('Unable to load history:', response.statusText);
+                  return; // Exit the promise chain
+              }
+              return response.json();
+          })
+          .then(data => {
+              setUserInfo(data[0]);
+          })
+          .catch(error => console.error('Error:', error));
+  }, []);
+
 
   const [volunteerJobs, setVolunteerJobs] = useState([])
   useEffect(() => {
@@ -37,9 +51,9 @@ function VolunteerHistory() {
       <main className="main-content">
         <div className="historypage">
           <div className="left-col">
-            <h3>{userInfo.fullName}</h3>
+            <h3>{userInfo.fullname}</h3>
             <p> {userInfo.city}, {userInfo.state} </p>
-            <p> Amount of Volunteer done: {userInfo.volunteerDone}</p>
+            <p> Amount of Volunteer done: {volunteerJobs.length}</p>
           </div>
 
           <div className="right-col">
@@ -48,11 +62,11 @@ function VolunteerHistory() {
               (<p>This persion has no volunteer history.</p>):
               (volunteerJobs.map((job, index) => (
               <div key={index} className="event-card">
-                <h3>{job.eventName}</h3>
-                <p><strong>Date:</strong> {job.eventDate}</p>
+                <h3>{job.name}</h3>
+                <p><strong>Date:</strong> {job.date}</p>
                 <p><strong>Description:</strong> {job.description}</p>
                 <p><strong>Location:</strong> {job.location}</p>
-                <p><strong>Required Skills:</strong> {job.skills.join(", ")}</p>
+                {/* <p><strong>Required Skills:</strong> {job.skills.join(", ")}</p> */}
                 <p><strong>Urgency:</strong> {job.urgency}</p>
                 <p><strong>Status:</strong> {job.eventStatus} </p>
                 <p><strong></strong></p>
