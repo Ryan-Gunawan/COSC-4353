@@ -275,16 +275,20 @@ def send_assignment_notification():
     event_name = data.get('eventName')
     event_date = data.get('eventDate')
 
-    if not user_id or not event_name or not date:
+    if not user_id or not event_name or not event_date:
         return jsonify({'msg': 'user_id, event_name, and event_date are required fields'}), 400
 
     notifications = load_notifications()
 
+    # Check if the user_id exists in the notifications, if not, create an empty list
+    if user_id not in notifications:
+        notifications[user_id] = []
+
     today = date.today()
-    current_date = today.strftime("%m-%d-%y")
+    current_date = today.strftime("%Y-%m-%d")
 
     new_notification = {
-        "id": len(notifications.get(user_id, [])) + 1,
+        "id": len(notifications[user_id]) + 1,  # Increment notification ID for the user
         "title": "Assignment",
         "date": current_date,
         "message": "Event assigned: " + event_name + " on " + event_date,
@@ -292,13 +296,16 @@ def send_assignment_notification():
         "read": False
     }
 
+    # Append the new notification to the user's notification list
     notifications[user_id].append(new_notification)
+
+    # Save the updated notifications
     save_notifications(notifications)
 
     socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
 
     print(f"Notification sent to user {user_id} for event '{event_name}'.")
-    return jsonify({'msg': 'Notification send successfully'}), 200
+    return jsonify({'msg': 'Notification sent successfully'}), 200
 
 # Sends reminder as event dates approach. Checks daily for upcoming events
 # Once we do database consider tracking whether a reminder has been sent for each user and event
@@ -470,7 +477,7 @@ def match_user():
     event_id = data.get('event_id')  # The ID of the event to match with
 
     # Load user data from the JSON file
-    with open('userinfo.json', 'r') as f:
+    with open('dummy/users.json', 'r') as f:
         users_data = json.load(f)
 
     # Find the user by ID
@@ -490,7 +497,7 @@ def match_user():
         return jsonify({'message': 'User not found.'}), 404
 
     # Save the updated user data back to the JSON file
-    with open('userinfo.json', 'w') as f:
+    with open('dummy/users.json', 'w') as f:
         json.dump(users_data, f, indent=4)
 
     return jsonify({'message': 'User matched successfully!'}), 200

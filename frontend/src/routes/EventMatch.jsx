@@ -54,37 +54,26 @@ const PeopleEventMatcher = () => {
     personAvailability = Array.isArray(personAvailability) ? personAvailability : [];
     eventDate = Array.isArray(eventDate) ? eventDate : [];
 
-    return personAvailability.includes(eventDate);
+    return true;
   };
 
 
   // Handles confirm button press
   const handleConfirm = async (eventName) => {
-    // Log the incoming event name
-    console.log("Dropdown Selected Event:", eventName);
 
     const selectedEvent = events.find(event => event.name === eventName);
-    
-    // Log selected event details
-    console.log("Selected Event:", selectedEvent);
     const selectedUser = selectedEvents[eventName];
     // Ensure that a user is selected
     if (!selectedUser) {
         alert("No user selected for event");
         return;
     }
-
     // Find the selected user based on their email
     const person = people.find(p => p.email === selectedUser);
-
-    // Log found person details
-    console.log("Selected User:", person);
-
     if (!person) {
         alert("No user selected for event");
         return;
     }
-
     const userId = person.id;
     const eventId = selectedEvent.id;
 
@@ -100,7 +89,7 @@ const PeopleEventMatcher = () => {
       }
 
     // Send POST request to match user to event
-    const response = await fetch('/api/match_user', {
+    const response = await fetch('http://127.0.0.1:5000/api/match_user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -115,6 +104,33 @@ const PeopleEventMatcher = () => {
     } else {
         alert(responseData.message);
     }
+
+    try {
+      const notificationData = {
+          userId: person.id, // Assuming the user's ID is available
+          eventName: selectedEvent.name,
+          eventDate: selectedEvent.date,
+      };
+
+      const response = await fetch('http://127.0.0.1:5000/api/send-assignment-notification', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(notificationData),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+          console.log(result.msg);
+          alert("Volunteer successfully matched and notification sent.");
+      } else {
+          alert(result.msg);
+      }
+  } catch (error) {
+      console.error("Failed to send notification:", error);
+      alert("An error occurred while sending the notification.");
+  }
 };
 
 
