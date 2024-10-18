@@ -33,9 +33,12 @@ const PeopleEventMatcher = () => {
   }, []);
 
   const hasRequiredSkills = (personSkills, requiredSkills) => {
-    // Ensure both are arrays before calling some
-    if (!Array.isArray(personSkills) || !Array.isArray(requiredSkills)) {
-        return false;
+
+    personSkills = Array.isArray(personSkills) ? personSkills : [];
+    requiredSkills = Array.isArray(requiredSkills) ? requiredSkills : [];
+
+    if(requiredSkills.length === 0){
+      return true;
     }
     
     // Normalize skills to lower case and trim whitespace
@@ -48,62 +51,70 @@ const PeopleEventMatcher = () => {
 
   // Function to check if the person is available for the event
   const isAvailable = (personAvailability, eventDate) => {
+    personAvailability = Array.isArray(personAvailability) ? personAvailability : [];
+    eventDate = Array.isArray(eventDate) ? eventDate : [];
+
     return personAvailability.includes(eventDate);
   };
 
-// Handle confirm button click
-const handleConfirm = (eventName) => {
-  // Get the selected user's email based on the event name
-  const selectedUserEmail = selectedEvents[eventName]; 
-  console.log("Selected User Email:", selectedUserEmail); // Debugging log
 
-  // Check if selectedUserEmail is valid
-  if (!selectedUserEmail) {
-      setAlertMessage("No user selected for this event.");
-      return;
-  }
+  // Handles confirm button press
+  const handleConfirm = async (eventName) => {
+    // Log the incoming event name
+    console.log("Dropdown Selected Event:", eventName);
 
-  // Find the selected event
-  const selectedEvent = events.find(event => event.name === eventName);
-  // Find the person by email
-  const person = people.find(p => p.email === selectedUserEmail); 
-  // Check if person exists and has a volunteer array
-  if (person) {
-    if (!Array.isArray(person.volunteer)) {
-      person.volunteer = []; // Initialize if not an array
-        }
-      }
-  if (selectedEvent && person) {
-    const requiredSkills = Array.isArray(selectedEvent.skills) ? selectedEvent.skills : [];
-    // Check if the person's skills are defined
-    // Use the hasRequiredSkills function to check for skills
-    const hasSkills = hasRequiredSkills(person.skills, requiredSkills);
-
-    const available = person.availability && person.availability.length > 0 
-        ? isAvailable(person.availability, selectedEvent.date) 
-        : true;
-
-    // Check if the volunteer is already matched to the event
-    if (person.volunteer.includes(selectedEvent.id)) {
-        setAlertMessage(`${person.fullname || person.email} has already been matched to this event.`);
+    const selectedEvent = events.find(event => event.name === eventName);
+    
+    // Log selected event details
+    console.log("Selected Event:", selectedEvent);
+    const selectedUser = selectedEvents[eventName];
+    // Ensure that a user is selected
+    if (!selectedUser) {
+        alert("No user selected for event");
         return;
     }
-    else{
 
-    // Proceed with matching if they have the required skills or undefined skills and are available
-    if (hasSkills && available) {
-        person.volunteer.push(selectedEvent.id); // Add event ID to volunteer array
-        setAlertMessage(`${person.fullname || person.email} is successfully matched with ${selectedEvent.name}!`);
+    // Find the selected user based on their email
+    const person = people.find(p => p.email === selectedUser);
+
+    // Log found person details
+    console.log("Selected User:", person);
+
+    if (!person) {
+        alert("No user selected for event");
         return;
-      } else {
-        setAlertMessage(`${person.fullname || person.email} does not meet the requirements for ${selectedEvent.name}.`);
-        return;
-      }
     }
-} else {
-    setAlertMessage("User or event not found.");
-    return;
-}
+
+    const userId = person.id;
+    const eventId = selectedEvent.id;
+
+    // Check if user has required skills
+    if (!hasRequiredSkills(person.skills, selectedEvent.requiredSkills)) {
+        alert("User does not have the required skills for this event.");
+        return;
+    }
+    // Check if user has avaliability
+    if (!isAvailable(person.availability, selectedEvent.date)) {
+          alert("User is not avaliable for this event.");
+          return;
+      }
+
+    // Send POST request to match user to event
+    const response = await fetch('/api/match_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId, event_id: eventId }),
+    });
+
+    const responseData = await response.json();
+
+    if (response.ok) {
+        alert(responseData.message);
+    } else {
+        alert(responseData.message);
+    }
 };
 
 
@@ -131,7 +142,6 @@ const handleConfirm = (eventName) => {
               <select
                 onChange={(e) => 
                   {const selectedUserEmail = e.target.value;
-                  console.log("Dropdown Selected Email:", selectedUserEmail); // Debugging log
                   setSelectedEvents(prev => ({ ...prev, [event.name]: selectedUserEmail }));}}
               style={styles.dropdown}
               >
@@ -203,14 +213,7 @@ const styles = {
     color: 'white',
     border: 'none',
     cursor: 'pointer'
-  },
-  alert: {
-    padding: '10px',
-    margin: '10px 0',
-    color: 'white',
-    backgroundColor: '#f44336', // Red
-    borderRadius: '5px',
-  },
+  }
 };
 
 export default PeopleEventMatcher;

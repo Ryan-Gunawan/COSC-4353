@@ -423,3 +423,38 @@ def read_users_from_file():
         with open('dummy/users.json', 'r') as f:
             return json.load(f)
     return []
+
+
+@app.route('/api/match_user', methods=['POST'])
+def match_user():
+    # Get JSON data from the request
+    data = request.get_json()
+
+    user_id = data.get('user_id')  # The ID of the user to match
+    event_id = data.get('event_id')  # The ID of the event to match with
+
+    # Load user data from the JSON file
+    with open('userinfo.json', 'r') as f:
+        users_data = json.load(f)
+
+    # Find the user by ID
+    user_found = False
+    for user in users_data['users']:
+        if user['id'] == user_id:
+            # Check if the user is already matched to the event
+            if event_id in user.get('volunteer', []):
+                return jsonify({'message': 'Volunteer has already been matched to this event.'}), 400
+            
+            # Add event ID to volunteer array
+            user.setdefault('volunteer', []).append(event_id)
+            user_found = True
+            break
+
+    if not user_found:
+        return jsonify({'message': 'User not found.'}), 404
+
+    # Save the updated user data back to the JSON file
+    with open('userinfo.json', 'w') as f:
+        json.dump(users_data, f, indent=4)
+
+    return jsonify({'message': 'User matched successfully!'}), 200
