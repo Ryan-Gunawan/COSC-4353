@@ -44,14 +44,33 @@ const PeopleEventMatcher = () => {
     }));
   };
 
-  // Handle confirm button click (no skill matching, just alert for now)
+  // Function to check if the user is available on the event date
+  const isAvailableForEvent = (availabilityArray, eventDate) => {
+    return availabilityArray.includes(eventDate);
+  };
+
+  const matchingSkills = (skillArray, eventSkills) => {
+    return skillArray.includes(eventSkills);
+  };
+
+  // Handle confirm button click
   const handleConfirm = (personFullname) => {
     const selectedEventName = selectedEvents[personFullname];
     const selectedEvent = events.find(event => event.name === selectedEventName);
     const person = people.find(p => p.fullname === personFullname);
 
     if (selectedEvent && person) {
-      alert(`${personFullname} is successfully matched with ${selectedEvent.name}!`);
+      // Check if the user is available for the event date
+      const isAvailable = isAvailableForEvent(person.availability, selectedEvent.date);
+      const hasSkills = matchingSkills(person.skills, selectedEvent.skills)
+
+      if (hasSkills && isAvailable) {
+        alert(`${personFullname} is successfully matched with ${selectedEvent.name}!`);
+      } else if (!hasSkills) {
+        alert(`${personFullname} does not have the required skills for ${selectedEvent.name}.`);
+      } else if (!isAvailable) {
+        alert(`${personFullname} is not available on the date of ${selectedEvent.name}.`);
+      }
     }
   };
 
@@ -69,7 +88,7 @@ const PeopleEventMatcher = () => {
               <h2>{person.fullname}</h2>
               <p><strong>Address:</strong> {`${person.address1}, ${person.address2 ? person.address2 + ', ' : ''}${person.city}, ${person.state} ${person.zipcode}`}</p>
               <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
-              <p><strong>Availability:</strong> {person.availability}</p>
+              <p><strong>Availability:</strong> {person.availability.length > 0 ? person.availability.join(', ') : "No availability"}</p>
               <p><strong>Preference:</strong> {person.preference}</p>
 
               {/* Dropdown for event selection */}
@@ -82,7 +101,7 @@ const PeopleEventMatcher = () => {
                   <option
                     key={idx}
                     value={event.name}
-                    title={`Event Date: ${event.date}`} // Tooltip with event date
+                    title={`Event Date: ${event.date}, Event Skills: ${event.skills}`} // Tooltip with event date
                   >
                     {event.name} - {event.location}
                   </option>
