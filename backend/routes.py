@@ -343,7 +343,10 @@ scheduler.start()
 
 # When admin updates an event all the assigned users are sent an update notification
 # may need to change to use a route: get request data with event_id
-def send_event_update_notifications(event_id):
+@app.route('/api/notifications/update', methods = ['POST'])
+def send_event_update_notifications():
+    data = request.get_json()
+    event_id = data.get('eventId')
     events = read_events_from_file()
     notifications = load_notifications()
     today = date.today()

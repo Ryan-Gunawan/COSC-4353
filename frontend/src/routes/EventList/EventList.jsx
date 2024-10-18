@@ -105,6 +105,7 @@ const EventList = () => {
     } catch (error) {
       console.error("Error saving event:", error);
     }
+
   };
 
   const cancelEdit = () => {
@@ -122,9 +123,9 @@ const EventList = () => {
           {isAdmin && (
             <a href="/newevent"><button className="create-event-button">Create Event</button></a>
           )}
-          {isAdmin && (          
-          <a href="/eventmatch"><button className="volunteer-button">Find Volunteers</button></a>
-        )}        
+          {isAdmin && (
+            <a href="/eventmatch"><button className="volunteer-button">Find Volunteers</button></a>
+          )}
         </div>
         <ul style={styles.eventList}>
           {events.map(event => (
