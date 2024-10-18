@@ -5,47 +5,49 @@ import Footer from '../components/Footer/Footer';
 const PeopleEventMatcher = () => {
   const [people, setPeople] = useState([]);
   const [events, setEvents] = useState([]);
+  const [selectedEvents, setSelectedEvents] = useState({}); // For selected events per user
+  const [loading, setLoading] = useState(true); // Loading state for users
 
-  // Fetch users and events from the API on component mount
+  // Fetch users from the new API route
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUsers = async () => {
       try {
-        // Fetch users from the Flask API
-        const usersResponse = await fetch('http://127.0.0.1:5000/api/users');
-        const usersData = await usersResponse.json();
-        
-        // Map users data to match the required fields
-        const mappedUsers = usersData.map(user => ({
-          name: user.email,          // Assuming email is used for display
-          location: "Unknown",       // Adjust if needed
-          skills: ["Unknown"],       // Replace with actual skills if available
-        }));
-        setPeople(mappedUsers); // Set the mapped users to state
+        const response = await fetch('http://127.0.0.1:5000/api/usersList');
+        const usersData = await response.json();
+        console.log("Fetched users data:", usersData);
+  
+        // Check if the data is wrapped in a 'users' key, extract the array if needed
+        if (usersData.users) {
+          setPeople(usersData.users);  // Set the 'users' array from the fetched data
+        } else {
+          console.log("Broken")
+          setPeople([]);  // Fallback if data format is unexpected
+        }
+  
+        setLoading(false); // Set loading to false after fetching
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setLoading(false); // Stop loading even on error
+      }
+    };
+  
+    fetchUsers();
+  }, []); // Run only once on component mount
 
-        // Fetch events from the Flask API
+  // Fetch events (if not hardcoded) - you can implement a similar fetch for events
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
         const eventsResponse = await fetch('http://127.0.0.1:5000/api/eventlist');
         const eventsData = await eventsResponse.json();
-        
-        // Map events data to match the required fields (assuming you're manually adding skills and urgency)
-        const mappedEvents = eventsData.map(event => ({
-          eventID: event.id,
-          eventName: event.name,           // Using event name
-          eventDate: event.date,         // Event date
-          location: event.location,       // Event location
-          description: event.description, // Event description
-          eventSkills: event.skills, // Example skills (replace with actual skills)
-        }));
-        setEvents(mappedEvents); // Set the mapped events to state
+        setEvents(eventsData); // Update state with fetched events
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching events:', error);
       }
     };
 
-    fetchData();
-  }, []); // Empty dependency array means this will only run once when the component mounts
-
-  // State to store selected event for each person
-  const [selectedEvents, setSelectedEvents] = useState({});
+    fetchEvents();
+  }, []);
 
   // Handle event selection
   const handleEventChange = (personName, eventName) => {
@@ -63,55 +65,62 @@ const PeopleEventMatcher = () => {
   // Handle confirm button click
   const handleConfirm = (personName) => {
     const selectedEventName = selectedEvents[personName];
-    const selectedEvent = events.find(event => event.eventName === selectedEventName);
-    const person = people.find(p => p.name === personName);
+    const selectedEvent = events.find(event => event.name === selectedEventName);
+    const person = people.find(p => p.fullname === personName);
 
     if (selectedEvent && person) {
       const isMatch = hasRequiredSkills(person.skills, selectedEvent.skills);
 
       if (isMatch) {
-        alert(`${personName} is successfully matched with ${selectedEvent.eventName}!`);
+        alert(`${personName} is successfully matched with ${selectedEvent.name}!`);
       } else {
-        alert(`${personName} does not have the required skills for ${selectedEvent.eventName}.`);
+        alert(`${personName} does not have the required skills for ${selectedEvent.name}.`);
       }
     }
   };
+
+  // If still loading users, display a loading message
+  if (loading) {
+    return <div>Loading users...</div>;
+  }
 
   return (
     <div className="page-container">
       <Navbar />
       <header style={styles.header}>People & Event Matcher</header>
-  
+
       <main className="main-content">
-        <ul style={styles.peopleList}>
-          {people.map((person, index) => (
-            <li key={index} style={styles.personItem}>
-              <h2>{person.name}</h2>
-              <p><strong>Location:</strong> {person.location || "Not provided"}</p>
-              <p><strong>Skills:</strong> {person.skills?.length > 0 ? person.skills.join(', ') : "Skills not listed"}</p>
-  
-              {/* Dropdown for event selection */}
+        <ul style={styles.eventList}>
+          {events.map((event, index) => (
+            <li key={index} style={styles.eventItem}>
+              {/* Display event details */}
+              <h2>{event.name}</h2>
+              <p><strong>Date:</strong> {event.date}</p>
+              <p><strong>Location:</strong> {event.location}</p>
+              <p><strong>Description:</strong> {event.description}</p>
+
+              {/* Dropdown for user selection */}
               <select
-                onChange={(e) => handleEventChange(person.name, e.target.value)}
+                onChange={(e) => handleUserChange(event.name, e.target.value)}
                 style={styles.dropdown}
               >
-                <option value="">Select an event</option>
-                {events.map((event, idx) => (
+                <option value="">Select a user</option>
+                {people.map((person, idx) => (
                   <option
                     key={idx}
-                    value={event.eventName}
-                    title={`Skills required: ${event.skills?.join(', ') || "None specified"}`} // Tooltip with required skills
+                    value={person.fullname || person.email}
+                    title={`Skills: ${Array.isArray(person.skills) ? person.skills.join(', ') : 'No skills listed'} Availability: ${Array.isArray(person.availability) ? person.availability.join(', ') : 'No availability listed'}`} // Tooltip with skills
                   >
-                    {event.eventName} - {event.urgency || "Urgency not listed"}
+                    {person.fullname || person.email}
                   </option>
                 ))}
               </select>
-  
+
               {/* Confirm button */}
               <button
-                onClick={() => handleConfirm(person.name)}
+                onClick={() => handleConfirm(event.name)}
                 style={styles.button}
-                disabled={!selectedEvents[person.name]} // Disable if no event selected
+                disabled={!selectedEvents[event.name]} // Disable if no user selected
               >
                 Confirm Match
               </button>
@@ -119,12 +128,13 @@ const PeopleEventMatcher = () => {
           ))}
         </ul>
       </main>
+
       <Footer />
     </div>
   );
-  
 };
 
+// Basic inline styles for the component
 const styles = {
   header: {
     backgroundColor: '#28a745',
@@ -168,3 +178,4 @@ const styles = {
 };
 
 export default PeopleEventMatcher;
+

@@ -410,3 +410,16 @@ def update_userinfo(user_id):
         json.dump(old_data, f, indent=4)
         
     return jsonify({"msg": "User info updated successfully"}), 200
+
+
+
+@app.route("/api/usersList", methods=["GET"])
+def get_userList():
+    users = read_users_from_file()
+    return jsonify(users), 200
+
+def read_users_from_file():
+    if os.path.exists('dummy/users.json'):
+        with open('dummy/users.json', 'r') as f:
+            return json.load(f)
+    return []
