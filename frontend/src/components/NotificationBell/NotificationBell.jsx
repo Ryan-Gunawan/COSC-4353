@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FaRegBell } from "react-icons/fa";
 import { io } from 'socket.io-client';
 import './NotificationBell.css'
 import axios from 'axios';
+// import socket from "../../socket.js";
+import { SocketContext } from '../../SocketProvider.jsx'
 
-const socket = io('http://localhost:5000');
 
 const NotificationBell = () => {
+    const { socket } = useContext(SocketContext);
 
     const [hasUnread, setHasUnread] = useState(false);
 
@@ -29,10 +31,9 @@ const NotificationBell = () => {
 
         // Cleanup on component unmount
         return () => {
-            // socket.disconnect();
             socket.off('unread_notification')
         }
-    }, []);
+    }, [socket]);
 
     return (
         <div className="bell" style={styles.bell}>

@@ -2,7 +2,7 @@ from flask import Flask, session
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 from datetime import timedelta
 
 app = Flask(__name__)
@@ -40,6 +40,21 @@ import routes
 # creates all needed database tables
 with app.app_context():
     db.create_all()
+
+# @socketio.on('connect')
+# def handle_connect():
+#     print('socketio client connected')
+
+# @socketio.on('connect')
+# def on_connect():
+#     user_id = session.get('user_id')
+#     if user_id:
+#         join_room(user_id)
+#         print(f"User {user_id} joined room")
+
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     print('socketio client disconnected')
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)

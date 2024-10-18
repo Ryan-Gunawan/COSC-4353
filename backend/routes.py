@@ -6,7 +6,7 @@ import re
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 
 USER_FILE = 'dummy/users.json'
 
@@ -238,9 +238,16 @@ def delete_notification():
 
     notifications = load_notifications()
     user_notifications = notifications.get(user_id, [])
+    # Delete "id" or id, string and int ids. Once we get database we can remove the string check
     notifications[user_id] = [n for n in user_notifications if str(n['id']) != notification_id]
+    notifications[user_id] = [n for n in user_notifications if n['id'] != notification_id]
 
     save_notifications(notifications)
+
+    # check if there are any remaining unread notifs and emit to frontend
+    has_unread = has_unread_notificiations(user_id)
+    socketio.emit('unread_notification', {'has_unread': has_unread}, to=str(user_id))
+
     return jsonify({'msg': 'Notification deleted successfully'}), 204
 
 # # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
@@ -253,10 +260,11 @@ def check_unread_notification():
     user_notifications = notifications.get(user_id, [])
     has_unread = any(notification['read'] == False for notification in user_notifications)
     return jsonify({'has_unread': has_unread})
-    # if has_unread:
-    #     socketio.emit('unread_notification', {'has_unread': True})
-    # else:
-    #     socketio.emit('unread_notification', {'has_unread': False})
+
+def has_unread_notificiations(user_id):
+    notifications = load_notifications()
+    user_notifications = notifications.get(user_id, [])
+    return any(notification['read'] == False for notification in user_notifications)
 
 
 # Send event assignment notification
@@ -363,10 +371,11 @@ def get_history():
             history = json.load(f)
     return jsonify(history), 200
 
-@socketio.on('connect')
-def handle_connect():
-    print('socketio client connected')
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    print('socketio client disconnected')
+@socketio.on('join')
+def on_join():
+    user_id = session.get('user_id')
+    if user_id:
+        join_room(user_id)
+        print(f"User {user_id} has joined room {user_id}")
+    else:
+        print("No user_id in session. User is not logged in.")
