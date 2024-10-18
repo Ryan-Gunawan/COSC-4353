@@ -28,11 +28,13 @@ def get_events():
     #return jsonify(result), 200
     events = read_events_from_file()
     return jsonify(events), 200
+
 def read_events_from_file():
     if os.path.exists('dummy/events.json'):
         with open('dummy/events.json', 'r') as f:
             return json.load(f)  # Directly return the loaded list
     return [] # Return an empty list if the file does not exist
+
 def add_events_to_file(events):
     with open('dummy/events.json', 'w') as f:
         json.dump(events, f, indent=4)
@@ -69,6 +71,9 @@ def post_event():
     events.append(data)
     add_events_to_file(events)
     return jsonify({"msg": "Event created successfully"}), 201
+
+
+### Login and Registration Routes and Functions ###
 
 @app.route("/api/register", methods = ["GET"])
 def register_users():
@@ -108,13 +113,15 @@ def add_user(email, password):
     save_users(data)
     return new_user
 
+# I don't think we even use this. Just get the session user_id within whatever function needs it
 # Return the logged in user's ID
-def get_logged_in_user():
-    user_id = session['user_id']
-    if user_id:
-        return user_id
-    else:
-        return None
+# @app.route("/api/getloggedinuser", methods = ["GET"])
+# def get_logged_in_user():
+#     user_id = session['user_id']
+#     if user_id:
+#         return user_id
+#     else:
+#         return None
 
 # Functions to validate registration inputs
 def validate_email(email):
@@ -126,12 +133,13 @@ def validate_password(password):
     return len(password) > 0 and len(password) <= 128
 
 # Functions to validate login inputs
-def validate_login_email(email):
-    valid = True
-    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-    if re.match(email_regex, email) is not None:
-        valid = False
-    return valid
+# I think this is not even used?
+# def validate_login_email(email):
+#     valid = True
+#     email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+#     if re.match(email_regex, email) is not None:
+#         valid = False
+#     return valid
 
 # Register validation route
 @app.route("/api/register", methods = ["POST"])

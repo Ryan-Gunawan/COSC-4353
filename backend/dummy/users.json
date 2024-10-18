@@ -53,6 +53,12 @@
             "email": "sdfswdf@gmail.com",
             "password": "lkjsdfs",
             "admin": false
+        },
+        {
+            "id": 10,
+            "email": "email@test.com",
+            "password": "password",
+            "admin": false
         }
     ]
 }
