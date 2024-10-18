@@ -346,10 +346,17 @@ def get_userinfo():
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
     info = []
-    if os.path.exists('dummy/userinfo.json'):
-        with open('dummy/userinfo.json', 'r') as f:
-            info = json.load(f)
-    return jsonify(info.get(user_id, [])), 200
+    if os.path.exists('dummy/users.json'):
+        with open('dummy/users.json', 'r') as f:
+            data = json.load(f)
+            users_info = data.get('users', [])
+            
+            for user in users_info:
+                if user['id'] == user_id:
+                    info.append(user) #Return as array
+                    break
+
+    return jsonify(info), 200
 
 @app.route("/api/userprofile/<int:user_id>", methods=["PUT"])
 def update_userinfo(user_id):
@@ -357,15 +364,18 @@ def update_userinfo(user_id):
     old_data = []
 
     # Get old data
-    if os.path.exists('dummy/userinfo.json'):
-        with open('dummy/userinfo.json', 'r') as f:
+    if os.path.exists('dummy/users.json'):
+        with open('dummy/users.json', 'r') as f:
             old_data = json.load(f)
 
-    if str(user_id) in old_data:
-        user_info = old_data[str(user_id)][0]  # Access the first object in the list
-        user_info.update(data)  # Update the user info
+    users = old_data.get('users', [])
+
+    for user in users:
+        if user['id'] == str(user_id):
+            user.update(data)
     
     # Write data into json
-    with open('dummy/userinfo.json', 'w') as f:
+    with open('dummy/users.json', 'w') as f:
         json.dump(old_data, f, indent=4)
+        
     return jsonify({"msg": "User info updated successfully"}), 200
