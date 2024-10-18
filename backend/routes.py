@@ -247,6 +247,8 @@ def delete_notification():
 @app.route('/api/notifications/unread', methods=['GET'])
 def check_unread_notification():
     user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'No user logged in'}), 401
     notifications = load_notifications()
     user_notifications = notifications.get(user_id, [])
     has_unread = any(notification['read'] == False for notification in user_notifications)
@@ -278,11 +280,15 @@ def send_assignment_notification():
         "title": "Assignment",
         "date": current_date,
         "message": "Event assigned: " + event_name + " on " + event_date,
-        "type": "assignment"
+        "type": "assignment",
+        "read": False
     }
 
     notifications[user_id].append(new_notification)
     save_notifications(notifications)
+
+    socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+
     print(f"Notification sent to user {user_id} for event '{event_name}'.")
     return jsonify({'msg': 'Notification send successfully'}), 200
 
@@ -316,6 +322,7 @@ def send_reminder_notifications():
                     "read": False
                 }
                 notifications[user_id].append(new_notification)
+                socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
                 print("Appended notification successfully")
     save_notifications(notifications)
     print("Sent reminders for upcoming events")
@@ -340,9 +347,11 @@ def send_event_update_notifications(event_id):
             "title": "Update",
             "date": current_date,
             "message": f"Event Update: '{event['name']}' s been updated, please check the event listing to view any changes.",
-            "type": "update"
+            "type": "update",
+            "read": False
         }
         notifications[user_id].append(new_notification)
+        socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
     save_notifications(notifications)
     print("Sent update")
 

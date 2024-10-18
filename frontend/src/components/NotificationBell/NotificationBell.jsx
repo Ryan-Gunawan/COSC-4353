@@ -9,17 +9,19 @@ const socket = io('http://localhost:5000');
 const NotificationBell = () => {
 
     const [hasUnread, setHasUnread] = useState(false);
+
     const checkUnreadNotifications = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/notifications/unread');
+            const response = await axios.get('http://localhost:5000/api/notifications/unread', { withCredentials: true });
             setHasUnread(response.data.has_unread);
         } catch (error) {
             console.error('Error checking undread notifications:', error);
         }
-    }
+    };
 
     useEffect(() => {
-        // Connect to backend
+        checkUnreadNotifications();
+
         // Listen on 'unread_notification'
         socket.on('unread_notification', (data) => {
             setHasUnread(data.has_unread);
@@ -27,7 +29,8 @@ const NotificationBell = () => {
 
         // Cleanup on component unmount
         return () => {
-            socket.disconnect();
+            // socket.disconnect();
+            socket.off('unread_notification')
         }
     }, []);
 
