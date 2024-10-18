@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import "./LoginRegister.css";
 import { FaLock, FaEnvelope } from "react-icons/fa";
+// import socket from "../../socket.js";
+import { SocketContext } from '../../SocketProvider.jsx'
 
 const LoginRegister = () => {
+  const { socket } = useContext(SocketContext)
   const [action, setAction] = useState("");
 
   const registerLink = () => {
@@ -88,6 +91,7 @@ const LoginRegister = () => {
       if (response.status === 200) {
         alert(result.msg); // show success msg
         //alert("Registered successfully");
+        socket.emit("join")
         navigate("/userprofile");
       }
       else if (result.msg === "An account with this email already exists") {
@@ -122,6 +126,7 @@ const LoginRegister = () => {
       // Gets result from backend. If email and password are valid go to home otherwise send error msg
       const result = await response.json();
       if (result.success) {
+        socket.emit("join")
         navigate("/home");
         // alert("Login successful");
       } else {

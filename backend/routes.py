@@ -1,16 +1,17 @@
-from app import app, db
+from app import app, db, socketio
 from flask import Flask, request, jsonify, session, redirect, url_for
 import json
 from models import User, Event
 import re
 import os
-# from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
+from flask_socketio import SocketIO, emit, join_room
 
 USER_FILE = 'dummy/users.json'
 
 # Needed to periodically check to send reminder notifications
-# scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler()
 
 
 # Get all users
@@ -237,10 +238,34 @@ def delete_notification():
 
     notifications = load_notifications()
     user_notifications = notifications.get(user_id, [])
+    # Delete "id" or id, string and int ids. Once we get database we can remove the string check
     notifications[user_id] = [n for n in user_notifications if str(n['id']) != notification_id]
+    notifications[user_id] = [n for n in user_notifications if n['id'] != notification_id]
 
     save_notifications(notifications)
-    return '', 204
+
+    # check if there are any remaining unread notifs and emit to frontend
+    has_unread = has_unread_notificiations(user_id)
+    socketio.emit('unread_notification', {'has_unread': has_unread}, to=str(user_id))
+
+    return jsonify({'msg': 'Notification deleted successfully'}), 204
+
+# # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
+@app.route('/api/notifications/unread', methods=['GET'])
+def check_unread_notification():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'No user logged in'}), 401
+    notifications = load_notifications()
+    user_notifications = notifications.get(user_id, [])
+    has_unread = any(notification['read'] == False for notification in user_notifications)
+    return jsonify({'has_unread': has_unread})
+
+def has_unread_notificiations(user_id):
+    notifications = load_notifications()
+    user_notifications = notifications.get(user_id, [])
+    return any(notification['read'] == False for notification in user_notifications)
+
 
 # Send event assignment notification
 @app.route('/api/send-assignment-notification', methods=['POST'])
@@ -263,11 +288,15 @@ def send_assignment_notification():
         "title": "Assignment",
         "date": current_date,
         "message": "Event assigned: " + event_name + " on " + event_date,
-        "type": "assignment"
+        "type": "assignment",
+        "read": False
     }
 
     notifications[user_id].append(new_notification)
     save_notifications(notifications)
+
+    socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+
     print(f"Notification sent to user {user_id} for event '{event_name}'.")
     return jsonify({'msg': 'Notification send successfully'}), 200
 
@@ -297,15 +326,20 @@ def send_reminder_notifications():
                     "title": "Reminder",
                     "date": current_date,
                     "message": f"Event Reminder: '{event['name']}' is coming up in 24 hours!",
-                    "type": "reminder"
+                    "type": "reminder",
+                    "read": False
                 }
                 notifications[user_id].append(new_notification)
-        save_notifications(notifications)
+                socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+                print("Appended notification successfully")
+    save_notifications(notifications)
     print("Sent reminders for upcoming events")
 
 # Set up scheduler to periodically check to send reminder notifications
-# scheduler.add_job(send_reminder_notifications, 'interval', hours=24)
-# scheduler.start()
+# To test make sure event is set to next day not same day
+if not scheduler.get_job('reminder_notifications'):
+    scheduler.add_job(send_reminder_notifications, 'interval', hours=24, id='reminder_notifications')
+scheduler.start()
 
 # When admin updates an event all the assigned users are sent an update notification
 # may need to change to use a route: get request data with event_id
@@ -321,9 +355,11 @@ def send_event_update_notifications(event_id):
             "title": "Update",
             "date": current_date,
             "message": f"Event Update: '{event['name']}' s been updated, please check the event listing to view any changes.",
-            "type": "update"
+            "type": "update",
+            "read": False
         }
         notifications[user_id].append(new_notification)
+        socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
     save_notifications(notifications)
     print("Sent update")
 
@@ -444,7 +480,7 @@ def match_user():
             # Check if the user is already matched to the event
             if event_id in user.get('volunteer', []):
                 return jsonify({'message': 'Volunteer has already been matched to this event.'}), 400
-            
+
             # Add event ID to volunteer array
             user.setdefault('volunteer', []).append(event_id)
             user_found = True
@@ -458,3 +494,12 @@ def match_user():
         json.dump(users_data, f, indent=4)
 
     return jsonify({'message': 'User matched successfully!'}), 200
+
+@socketio.on('join')
+def on_join():
+    user_id = session.get('user_id')
+    if user_id:
+        join_room(user_id)
+        print(f"User {user_id} has joined room {user_id}")
+    else:
+        print("No user_id in session. User is not logged in.")

@@ -14,6 +14,7 @@ import EventMatch from './routes/EventMatch.jsx';
 import NotificationsPage from './routes/NotificationsPage/NotificationsPage.jsx';
 import UserProfile from './routes/UserProfile/UserProfile.jsx';
 import VolunteerHistory from './routes/VolunteerHistory/VolunteerHistory.jsx';
+import SocketProvider from './SocketProvider.jsx';
 
 const router = createBrowserRouter([
   {
@@ -56,6 +57,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <SocketProvider>
+      <RouterProvider router={router} />
+    </SocketProvider>
   </React.StrictMode>,
 )

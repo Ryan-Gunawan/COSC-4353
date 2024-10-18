@@ -2,10 +2,12 @@ from flask import Flask, session
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit, join_room
 from datetime import timedelta
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
+socketio = SocketIO(app, cors_allowed_origins="*") # enable cors for localhost
 
 app.secret_key = 'secretkey' # Required for sessions
 
@@ -39,5 +41,21 @@ import routes
 with app.app_context():
     db.create_all()
 
+# @socketio.on('connect')
+# def handle_connect():
+#     print('socketio client connected')
+
+# @socketio.on('connect')
+# def on_connect():
+#     user_id = session.get('user_id')
+#     if user_id:
+#         join_room(user_id)
+#         print(f"User {user_id} joined room")
+
+# @socketio.on('disconnect')
+# def handle_disconnect():
+#     print('socketio client disconnected')
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
+    # app.run(debug=True)
