@@ -8,6 +8,19 @@ from datetime import datetime
 
 USER_FILE = 'dummy/users.json'
 
+# New route to get users from userinfo.json
+@app.route("/api/userinfo", methods=["GET"])
+def get_userinfo():
+    users = read_users_from_file()
+    return jsonify(users), 200
+def read_users_from_file():
+    if os.path.exists('dummy/userinfo.json'):
+        with open('dummy/userinfo.json', 'r') as f:
+            return json.load(f)  # Directly return the loaded list
+    return [] # Return an empty list if the file does not exist
+
+if __name__ == "__main__":
+    app.run(debug=True)
 ### Login and Registration Routes and Functions ###
 
 # Get all users
