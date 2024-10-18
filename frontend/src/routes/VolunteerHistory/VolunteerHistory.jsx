@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Navbar from "../../components/Navbar/Navbar"
 import Footer from "../../components/Footer/Footer"
 import "./volunteerhistory.css"
-import "../../../../backend/dummy/history.json"
 
 function VolunteerHistory() {
   const userInfo = {
@@ -14,16 +13,21 @@ function VolunteerHistory() {
 
   const [volunteerJobs, setVolunteerJobs] = useState([])
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/api/volunteerHistory');
-        const data = await response.json();
-        setVolunteerJobs(data);
-      } catch (error) {
-        console.error("Error fetching:", error);
-      }
-    };
-    fetchHistory();
+      fetch("http://127.0.0.1:5000/api/volunteerhistory", {
+          method: 'GET',
+          credentials: 'include',
+      })
+          .then(response => {
+              if (!response.ok) {
+                  console.error('Unable to load history:', response.statusText);
+                  return; // Exit the promise chain
+              }
+              return response.json();
+          })
+          .then(data => {
+              setVolunteerJobs(data);
+          })
+          .catch(error => console.error('Error:', error));
   }, []);
 
   return (
@@ -40,7 +44,9 @@ function VolunteerHistory() {
 
           <div className="right-col">
             <h2> Volunteer History </h2>
-            {volunteerJobs.map((job, index) => (
+            {volunteerJobs.length === 0 ? 
+              (<p>This persion has no volunteer history.</p>):
+              (volunteerJobs.map((job, index) => (
               <div key={index} className="event-card">
                 <h3>{job.eventName}</h3>
                 <p><strong>Date:</strong> {job.eventDate}</p>
@@ -51,7 +57,8 @@ function VolunteerHistory() {
                 <p><strong>Status:</strong> {job.eventStatus} </p>
                 <p><strong></strong></p>
               </div>
-            ))}
+            ))
+          )}
           </div>
         </div>
       </main>
