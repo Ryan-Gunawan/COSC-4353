@@ -125,6 +125,7 @@ const handleConfirm = (eventName) => {
               <p><strong>Date:</strong> {event.date}</p>
               <p><strong>Location:</strong> {event.location}</p>
               <p><strong>Description:</strong> {event.description}</p>
+              <p><strong>Skills:</strong> {event.skills || "No Required Skills"}</p>
 
               {/* Dropdown for user selection */}
               <select
@@ -139,7 +140,7 @@ const handleConfirm = (eventName) => {
                   <option
                     key={user.id}
                     value={user.email} // Display the user's name in the dropdown
-                    title={`Availability: ${user.availability}`} // Tooltip with user's availability
+                    title={`Availability: ${user.availability}, Skills: ${user.skills}`} // Tooltip with user's availability
                   >
                     {user.fullname} ({user.email}) {/* Optionally show email */}
                   </option>
