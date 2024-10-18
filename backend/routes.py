@@ -333,11 +333,42 @@ def get_history():
     user_id = session['user_id']
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
+    
+    # Get volunteerhistory from users
     history = []
-    if os.path.exists('dummy/history.json'):
-        with open('dummy/history.json', 'r') as f:
-            history = json.load(f)
-    return jsonify(history.get(user_id, [])), 200
+    if os.path.exists('dummy/users.json'):
+        with open('dummy/users.json', 'r') as f:
+            data = json.load(f)
+            users_info = data.get('users', [])
+            
+    for user in users_info:
+        if user['id'] == user_id:
+            history = user.get('volunteer', [])
+            break
+    
+    # Get event info from databases
+    event_data = []
+    if os.path.exists('dummy/events.json'):
+        with open('dummy/events.json', 'r') as f:
+            event_data = json.load(f)
+    
+    # Find the event by ID
+    # job = 0
+    event_info = []
+    # for event in event_data:
+    #     if event['id'] == history[job]:
+    #         event_info.append(event)
+    #         job+=1
+
+    job = 0
+    for event in event_data:
+        if job < len(history) and event['id'] == history[job]:
+            event_info.append(event)
+            job += 1
+
+    # event_info = next((event for event in event_data if event['id'] == event_id), None)
+    
+    return jsonify(event_info), 200
 
 @app.route("/api/userprofile", methods = ["GET"])
 def get_userinfo():
