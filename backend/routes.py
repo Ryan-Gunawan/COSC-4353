@@ -4,9 +4,13 @@ import json
 from models import User, Event
 import re
 import os
-from datetime import datetime
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta, date
 
 USER_FILE = 'dummy/users.json'
+
+# Needed to periodically check to send reminder notifications
+scheduler = BackgroundScheduler()
 
 
 # Get all users
@@ -238,17 +242,90 @@ def delete_notification():
     save_notifications(notifications)
     return '', 204
 
-# Adds notifications to user
-@app.route('/api/notifications', methods=['POST'])
-def add_notification(user_id):
+# Send event assignment notification
+@app.route('/api/send-assignment-notification', methods=['POST'])
+def send_assignment_notification():
+    data = request.get_json()
+    user_id = data.get('userId')
+    event_name = data.get('eventName')
+    event_date = data.get('eventDate')
+
+    if not user_id or not event_name or not date:
+        return jsonify({'msg': 'user_id, event_name, and event_date are required fields'}), 400
+
     notifications = load_notifications()
-    new_notification = request.json
-    if user_id in notifications:
-        notifications[user_id].append(new_notification)
-    else:
-        notifications[user_id] = [new_notification]
+
+    today = date.today()
+    current_date = today.strftime("%m-%d-%y")
+
+    new_notification = {
+        "id": len(notifications.get(user_id, [])) + 1,
+        "title": "Assignment",
+        "date": current_date,
+        "message": "Event assigned: " + event_name + " on " + event_date,
+        "type": "assignment"
+    }
+
+    notifications[user_id].append(new_notification)
     save_notifications(notifications)
-    return jsonify(new_notification), 201
+    print(f"Notification sent to user {user_id} for event '{event_name}'.")
+    return jsonify({'msg': 'Notification send successfully'}), 200
+
+# Sends reminder as event dates approach. Checks daily for upcoming events
+# Once we do database consider tracking whether a reminder has been sent for each user and event
+# To better handle repeat reminders and timings
+def send_reminder_notifications():
+    events = read_events_from_file()
+    notifications = load_notifications()
+
+    now = datetime.now()
+    reminder_time = now + timedelta(hours=24)
+
+    today = date.today()
+    current_date = today.strftime("%m-%d-%y")
+
+    for event in events:
+        try:
+            event_date = datetime.strptime(event['date'], '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            event_date = datetime.strptime(event['date'], '%Y-%m-%d')
+
+        if now < event_date <= reminder_time:
+            for user_id in event['assignedUsers']:
+                new_notification = {
+                    "id": len(notifications.get(user_id, [])) + 1,
+                    "title": "Reminder",
+                    "date": current_date,
+                    "message": f"Event Reminder: '{event['name']}' is coming up in 24 hours!",
+                    "type": "reminder"
+                }
+                notifications[user_id].append(new_notification)
+        save_notifications(notifications)
+    print("Sent reminders for upcoming events")
+
+# Set up scheduler to periodically check to send reminder notifications
+scheduler.add_job(send_reminder_notifications, 'interval', hours=24)
+scheduler.start()
+
+# When admin updates an event all the assigned users are sent an update notification
+# may need to change to use a route: get request data with event_id
+def send_event_update_notifications(event_id):
+    events = read_events_from_file()
+    notifications = load_notifications()
+    today = date.today()
+    current_date = today.strftime("%m-%d-%y")
+    event = events[event_id]
+    for user_id in event['assignedUsers']:
+        new_notification = {
+            "id": len(notifications.get(user_id, [])) + 1,
+            "title": "Update",
+            "date": current_date,
+            "message": f"Event Update: '{event['name']}' s been updated, please check the event listing to view any changes.",
+            "type": "update"
+        }
+        notifications[user_id].append(new_notification)
+    save_notifications(notifications)
+    print("Sent update")
 
 @app.route("/api/volunteerHistory", methods = ["GET"])
 def get_history():
