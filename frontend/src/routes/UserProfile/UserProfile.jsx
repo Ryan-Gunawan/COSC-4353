@@ -93,7 +93,7 @@ function UserProfile() {
             setUserInfo((prevData) => ({
                 ...prevData,
                 availability: [...prevData.availability, date],
-                selectedDate: e.target.value
+                // selectedDate: e.target.value
             }));
         }
     };
