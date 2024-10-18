@@ -341,3 +341,47 @@ def get_history():
         with open('dummy/history.json', 'r') as f:
             history = json.load(f)
     return jsonify(history), 200
+
+
+@app.route("/api/volunteerhistory", methods = ["GET"])
+def get_history():
+    # session['user_id'] = "1" #manually
+    user_id = session['user_id']
+    if not user_id:
+        return jsonify({'msg': 'User not logged in'}), 401
+    history = []
+    if os.path.exists('dummy/history.json'):
+        with open('dummy/history.json', 'r') as f:
+            history = json.load(f)
+    return jsonify(history.get(user_id, [])), 200
+
+@app.route("/api/userprofile", methods = ["GET"])
+def get_userinfo():
+    # session['user_id'] = "1" #manually
+    user_id = session['user_id']
+    if not user_id:
+        return jsonify({'msg': 'User not logged in'}), 401
+    info = []
+    if os.path.exists('dummy/userinfo.json'):
+        with open('dummy/userinfo.json', 'r') as f:
+            info = json.load(f)
+    return jsonify(info.get(user_id, [])), 200
+
+@app.route("/api/userprofile/<int:user_id>", methods=["PUT"])
+def update_userinfo(user_id):
+    data = request.get_json()
+    old_data = []
+
+    # Get old data
+    if os.path.exists('dummy/userinfo.json'):
+        with open('dummy/userinfo.json', 'r') as f:
+            old_data = json.load(f)
+
+    if str(user_id) in old_data:
+        user_info = old_data[str(user_id)][0]  # Access the first object in the list
+        user_info.update(data)  # Update the user info
+    
+    # Write data into json
+    with open('dummy/userinfo.json', 'w') as f:
+        json.dump(old_data, f, indent=4)
+    return jsonify({"msg": "User info updated successfully"}), 200
