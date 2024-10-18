@@ -1,4 +1,4 @@
-from app import app, db
+from app import app, db, socketio
 from flask import Flask, request, jsonify, session, redirect, url_for
 import json
 from models import User, Event
@@ -6,6 +6,7 @@ import re
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
+from flask_socketio import SocketIO, emit
 
 USER_FILE = 'dummy/users.json'
 
@@ -240,7 +241,20 @@ def delete_notification():
     notifications[user_id] = [n for n in user_notifications if str(n['id']) != notification_id]
 
     save_notifications(notifications)
-    return '', 204
+    return jsonify({'msg': 'Notification deleted successfully'}), 204
+
+# # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
+# @app.route('/api/notifications/checkunread', methods=['GET'])
+# def notify_unread_notification():
+#     user_id = session.get('user_id')
+#     notifications = load_notifications()
+#     user_notifications = notifications.get(user_id, [])
+#     has_unread = any(notification['read'] == False for notification in user_notifications)
+#     if has_unread:
+#         socketio.emit('unread_notification', {'has_unread': True})
+#     else:
+#         socketio.emit('unread_notification', {'has_unread': False})
+
 
 # Send event assignment notification
 @app.route('/api/send-assignment-notification', methods=['POST'])
@@ -297,14 +311,18 @@ def send_reminder_notifications():
                     "title": "Reminder",
                     "date": current_date,
                     "message": f"Event Reminder: '{event['name']}' is coming up in 24 hours!",
-                    "type": "reminder"
+                    "type": "reminder",
+                    "read": False
                 }
                 notifications[user_id].append(new_notification)
-        save_notifications(notifications)
+                print("Appended notification successfully")
+    save_notifications(notifications)
     print("Sent reminders for upcoming events")
 
 # Set up scheduler to periodically check to send reminder notifications
-scheduler.add_job(send_reminder_notifications, 'interval', hours=24)
+# To test make sure event is set to next day not same day
+if not scheduler.get_job('reminder_notifications'):
+    scheduler.add_job(send_reminder_notifications, 'interval', hours=24, id='reminder_notifications')
 scheduler.start()
 
 # When admin updates an event all the assigned users are sent an update notification
@@ -334,3 +352,7 @@ def get_history():
         with open('dummy/history.json', 'r') as f:
             history = json.load(f)
     return jsonify(history), 200
+
+
+# if __name__ == "__main__":
+#     socketio.run(app)

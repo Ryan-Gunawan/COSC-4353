@@ -2,10 +2,12 @@ from flask import Flask, session
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 from datetime import timedelta
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
+socketio = SocketIO(app, cors_allowed_origins="*") # enable cors for localhost
 
 app.secret_key = 'secretkey' # Required for sessions
 

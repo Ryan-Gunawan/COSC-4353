@@ -83,6 +83,30 @@
             "date": "10-17-24",
             "message": "Event Reminder: 'Updated Event Name' is coming up in 24 hours!",
             "type": "reminder"
+        },
+        {
+            "id": 13,
+            "title": "Reminder",
+            "date": "10-18-24",
+            "message": "Event Reminder: 'Updated Event Name' is coming up in 24 hours!",
+            "type": "reminder",
+            "read": false
+        },
+        {
+            "id": 14,
+            "title": "Reminder",
+            "date": "10-18-24",
+            "message": "Event Reminder: 'Updated Event Name' is coming up in 24 hours!",
+            "type": "reminder",
+            "read": false
+        },
+        {
+            "id": 15,
+            "title": "Reminder",
+            "date": "10-18-24",
+            "message": "Event Reminder: 'Updated Event Name' is coming up in 24 hours!",
+            "type": "reminder",
+            "read": false
         }
     ],
     "2": [
