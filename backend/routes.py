@@ -372,7 +372,7 @@ def send_event_update_notifications(event_id):
 
 @app.route("/api/volunteerhistory", methods = ["GET"])
 def get_history():
-    session['user_id'] = "1" #manually
+    # session['user_id'] = "1" #manually
     user_id = session['user_id']
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
@@ -395,27 +395,19 @@ def get_history():
         with open('dummy/events.json', 'r') as f:
             event_data = json.load(f)
     
-    # Find the event by ID
-    # job = 0
+ 
     event_info = []
-    # for event in event_data:
-    #     if event['id'] == history[job]:
-    #         event_info.append(event)
-    #         job+=1
-
     job = 0
     for event in event_data:
         if job < len(history) and event['id'] == history[job]:
             event_info.append(event)
             job += 1
 
-    # event_info = next((event for event in event_data if event['id'] == event_id), None)
-    
     return jsonify(event_info), 200
 
 @app.route("/api/userprofile", methods = ["GET"])
 def get_userinfo():
-    session['user_id'] = "1" #manually
+    # session['user_id'] = "2" #manually
     user_id = session['user_id']
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
