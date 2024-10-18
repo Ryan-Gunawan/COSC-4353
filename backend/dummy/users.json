@@ -22,7 +22,11 @@
                 "2025-10-23",
                 "2025-10-14"
             ],
-            "volunteer": [1, 2, 4]
+            "volunteer": [
+                1,
+                2,
+                4
+            ]
         },
         {
             "id": "2",
@@ -42,7 +46,9 @@
             "availability": [
                 "2025-10-10"
             ],
-            "volunteer": [3]
+            "volunteer": [
+                3
+            ]
         },
         {
             "id": 3,
@@ -60,8 +66,12 @@
                 "Problem Solver"
             ],
             "preference": "",
-            "availability": [],
-            "volunteer": []
+            "availability": [
+                "2025-10-8T16:33:02"
+            ],
+            "volunteer": [
+                4
+            ]
         },
         {
             "id": 4,

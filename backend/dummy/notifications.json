@@ -91,5 +91,14 @@
             "message": "Event assigned: Food Bank",
             "type": "assignment"
         }
+    ],
+    "3": [
+        {
+            "id": 1,
+            "title": "Assignment",
+            "date": "2024-10-18",
+            "message": "Event assigned: Helping Teddy with his project on 2024-10-08T16:33:02",
+            "type": "assignment"
+        }
     ]
 }
