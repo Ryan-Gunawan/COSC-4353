@@ -76,7 +76,7 @@ const LoginRegister = () => {
     e.preventDefault(); // prevents page reloading
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
+      const response = await fetch("http://127.0.0.1:5000/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,7 +110,7 @@ const LoginRegister = () => {
     e.preventDefault(); // prevents page reloading
 
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const response = await fetch("http://127.0.0.1:5000/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
