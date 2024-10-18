@@ -5,113 +5,95 @@ import Footer from '../components/Footer/Footer';
 const PeopleEventMatcher = () => {
   const [people, setPeople] = useState([]);
   const [events, setEvents] = useState([]);
+  const [selectedEvents, setSelectedEvents] = useState({}); // Track selected events for each user
 
-  // Fetch users and events from the API on component mount
+  // Fetch users from the API route
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUsers = async () => {
       try {
-        // Fetch users from the Flask API
-        const usersResponse = await fetch('http://127.0.0.1:5000/api/users');
-        const usersData = await usersResponse.json();
-        
-        // Map users data to match the required fields
-        const mappedUsers = usersData.map(user => ({
-          name: user.email,          // Assuming email is used for display
-          location: "Unknown",       // Adjust if needed
-          skills: ["Unknown"],       // Replace with actual skills if available
-        }));
-        setPeople(mappedUsers); // Set the mapped users to state
-
-        // Fetch events from the Flask API
-        const eventsResponse = await fetch('http://127.0.0.1:5000/api/eventlist');
-        const eventsData = await eventsResponse.json();
-        
-        // Map events data to match the required fields (assuming you're manually adding skills and urgency)
-        const mappedEvents = eventsData.map(event => ({
-          eventID: event.id,
-          eventName: event.name,           // Using event name
-          eventDate: event.date,         // Event date
-          location: event.location,       // Event location
-          description: event.description, // Event description
-          eventSkills: event.skills, // Example skills (replace with actual skills)
-        }));
-        setEvents(mappedEvents); // Set the mapped events to state
+        const response = await fetch('http://127.0.0.1:5000/api/userinfo');
+        const usersData = await response.json();
+        const formattedUsers = Object.values(usersData).flat();
+        setPeople(formattedUsers);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching users:", error);
       }
     };
+    fetchUsers();
+  }, []);
 
-    fetchData();
-  }, []); // Empty dependency array means this will only run once when the component mounts
-
-  // State to store selected event for each person
-  const [selectedEvents, setSelectedEvents] = useState({});
+  // Fetch events from the API route
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/eventlist');
+        const eventsData = await response.json();
+        setEvents(eventsData);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+    fetchEvents();
+  }, []);
 
   // Handle event selection
-  const handleEventChange = (personName, eventName) => {
+  const handleEventChange = (personFullname, eventName) => {
     setSelectedEvents(prev => ({
       ...prev,
-      [personName]: eventName
+      [personFullname]: eventName
     }));
   };
 
-  // Function to check if the person has the required skills for the selected event
-  const hasRequiredSkills = (personSkills, eventSkills) => {
-    return eventSkills.every(skill => personSkills.includes(skill));
-  };
-
-  // Handle confirm button click
-  const handleConfirm = (personName) => {
-    const selectedEventName = selectedEvents[personName];
-    const selectedEvent = events.find(event => event.eventName === selectedEventName);
-    const person = people.find(p => p.name === personName);
+  // Handle confirm button click (no skill matching, just alert for now)
+  const handleConfirm = (personFullname) => {
+    const selectedEventName = selectedEvents[personFullname];
+    const selectedEvent = events.find(event => event.name === selectedEventName);
+    const person = people.find(p => p.fullname === personFullname);
 
     if (selectedEvent && person) {
-      const isMatch = hasRequiredSkills(person.skills, selectedEvent.skills);
-
-      if (isMatch) {
-        alert(`${personName} is successfully matched with ${selectedEvent.eventName}!`);
-      } else {
-        alert(`${personName} does not have the required skills for ${selectedEvent.eventName}.`);
-      }
+      alert(`${personFullname} is successfully matched with ${selectedEvent.name}!`);
     }
   };
 
   return (
     <div className="page-container">
+      {/* Header banner */}
       <Navbar />
       <header style={styles.header}>People & Event Matcher</header>
-  
+
       <main className="main-content">
+        {/* People list container */}
         <ul style={styles.peopleList}>
           {people.map((person, index) => (
             <li key={index} style={styles.personItem}>
-              <h2>{person.name}</h2>
-              <p><strong>Location:</strong> {person.location || "Not provided"}</p>
-              <p><strong>Skills:</strong> {person.skills?.length > 0 ? person.skills.join(', ') : "Skills not listed"}</p>
-  
+              <h2>{person.fullname}</h2>
+              <p><strong>Address:</strong> {`${person.address1}, ${person.address2 ? person.address2 + ', ' : ''}${person.city}, ${person.state} ${person.zipcode}`}</p>
+              <p><strong>Skills:</strong> {person.skills.join(', ')}</p>
+              <p><strong>Availability:</strong> {person.availability}</p>
+              <p><strong>Preference:</strong> {person.preference}</p>
+
               {/* Dropdown for event selection */}
               <select
-                onChange={(e) => handleEventChange(person.name, e.target.value)}
+                onChange={(e) => handleEventChange(person.fullname, e.target.value)}
                 style={styles.dropdown}
               >
                 <option value="">Select an event</option>
                 {events.map((event, idx) => (
                   <option
                     key={idx}
-                    value={event.eventName}
-                    title={`Skills required: ${event.skills?.join(', ') || "None specified"}`} // Tooltip with required skills
+                    value={event.name}
+                    title={`Event Date: ${event.date}`} // Tooltip with event date
                   >
-                    {event.eventName} - {event.urgency || "Urgency not listed"}
+                    {event.name} - {event.location}
                   </option>
                 ))}
               </select>
-  
+
               {/* Confirm button */}
               <button
-                onClick={() => handleConfirm(person.name)}
+                onClick={() => handleConfirm(person.fullname)}
                 style={styles.button}
-                disabled={!selectedEvents[person.name]} // Disable if no event selected
+                disabled={!selectedEvents[person.fullname]} // Disable if no event selected
               >
                 Confirm Match
               </button>
@@ -122,9 +104,9 @@ const PeopleEventMatcher = () => {
       <Footer />
     </div>
   );
-  
 };
 
+// Basic inline styles for the component
 const styles = {
   header: {
     backgroundColor: '#28a745',
