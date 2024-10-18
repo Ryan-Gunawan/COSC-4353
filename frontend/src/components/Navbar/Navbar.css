@@ -44,7 +44,7 @@
   font-size: 20px;
   padding: 10px 25px;
   border-radius: 50px;
-  transition: 0.2s
+  transition: 0.2s;
   margin: 0 5px;
 }
 
@@ -103,4 +103,6 @@
   }
   .nav-container .navbar ul li a {
     margin-bottom: 12px;
+}
+
 }

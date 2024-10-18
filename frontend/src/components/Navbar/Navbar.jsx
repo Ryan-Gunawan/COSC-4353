@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Navbar.css';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import logo from '../Assets/handslogo.jpg'
+
+
 
 const Navbar = () => {
     const [isActive, setIsActive] = useState(false);
@@ -9,6 +11,26 @@ const Navbar = () => {
     const handleHamburgerClick = () => {
         setIsActive(!isActive);
     };
+
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const fetchAdminStatus = async () => {
+          try {
+            const adminResponse = await fetch('http://localhost:5000/api/isadmin', {
+              method: 'GET',
+              credentials: 'include', // Include cookies for session
+            });
+            const adminData = await adminResponse.json();
+            setIsAdmin(adminData.admin);
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
+        };
+    
+        fetchAdminStatus();
+      }, []);
+    
 
     return (
         <div className="nav-container">
@@ -27,7 +49,9 @@ const Navbar = () => {
                 <ul>
                     <li><a href="/home">Home</a></li>
                     <li><a href="/eventlist">Events</a></li>
+                    {isAdmin && (                    
                     <li><a href="/eventmatch">Find Volunteers</a></li>
+                )}                       
                     <li><a href="/volunteerhistory">History</a></li>
                     <li><a href="/userprofile">Profile</a></li>
                     <li><a href="/">Sign Up</a></li>
