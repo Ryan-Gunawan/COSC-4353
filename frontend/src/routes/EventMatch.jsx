@@ -115,7 +115,7 @@ const handleConfirm = (eventName) => {
 
       <main className="main-content">
         {/* Alert message display */}
-        {alertMessage && <div className="alert">{alertMessage}</div>}
+        {alertMessage && <div style={styles.alert}>{alertMessage}</div>}
 
         {/* Events list container */}
         <ul style={styles.eventList}>

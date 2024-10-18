@@ -65,13 +65,13 @@
         },
         {
             "id": 4,
-            "email": "user2@example.com",
+            "email": "user3@example.com",
             "password": "password",
             "admin": false
         },
         {
             "id": 5,
-            "email": "user2@example.com",
+            "email": "user4@example.com",
             "password": "password",
             "admin": false
         },

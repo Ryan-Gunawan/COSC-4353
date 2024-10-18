@@ -122,6 +122,7 @@ const EventList = () => {
           {isAdmin && (
             <a href="/newevent"><button className="create-event-button">Create Event</button></a>
           )}
+          <a href="/eventmatch"><button className="volunteer-button">Find Volunteers</button></a>
         </div>
         <ul style={styles.eventList}>
           {events.map(event => (

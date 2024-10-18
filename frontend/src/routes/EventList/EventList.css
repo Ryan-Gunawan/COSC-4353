@@ -17,6 +17,17 @@
   transition: background-color 0.3s ease;
 }
 
+.volunteer-button{
+  background-color: #0f67eb;
+  color: white;
+  border: none;
+  padding: 18px 25px;
+  font-size: 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
 .create-event-button:hover {
     filter: brightness(85%); /* Darken button color */
 }
