@@ -54,6 +54,35 @@
     border-style: solid;
 }
 
-.submit-button{
-    
+.pad-10 button{
+    background-color: '#28a745',
+    /* borderRadius: '20px',
+    cursor: 'pointer',
+    marginRight: '10px',
+    fontSize: '1em' */
+}
+
+.selected-skills, .selected-availability {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.skill-item, .availability-item {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    /* display: inline-block; */
+    padding: 5px 10px;
+    margin: 5px;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+}
+
+.remove-skill, .remove-availability {
+    background: none;
+    border: none;
+    color: red;
+    cursor: pointer;
+    margin-left: 8px;
 }
