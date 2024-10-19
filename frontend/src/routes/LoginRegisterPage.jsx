@@ -1,4 +1,5 @@
 import LoginRegister from "../components/LoginRegister/LoginRegister"
+import React, { useEffect } from 'react';
 
 // we'll need this for deployment. Not 100% sure if it goes here though.
 // It'll need to be imported from here whenever we use it.

@@ -37,17 +37,17 @@ const PeopleEventMatcher = () => {
     personSkills = Array.isArray(personSkills) ? personSkills : [];
     requiredSkills = Array.isArray(requiredSkills) ? requiredSkills : [];
 
-    if(requiredSkills.length === 0){
+    if (requiredSkills.length === 0) {
       return true;
     }
-    
+
     // Normalize skills to lower case and trim whitespace
     const normalizedPersonSkills = personSkills.map(skill => skill.toLowerCase().trim());
     const normalizedRequiredSkills = requiredSkills.map(skill => skill.toLowerCase().trim());
 
     // Check if at least one required skill is in person's skills
     return normalizedRequiredSkills.some(skill => normalizedPersonSkills.includes(skill));
-};
+  };
 
   // Function to check if the person is available for the event
   const isAvailable = (personAvailability, eventDate) => {
@@ -65,73 +65,73 @@ const PeopleEventMatcher = () => {
     const selectedUser = selectedEvents[eventName];
     // Ensure that a user is selected
     if (!selectedUser) {
-        alert("No user selected for event");
-        return;
+      alert("No user selected for event");
+      return;
     }
     // Find the selected user based on their email
     const person = people.find(p => p.email === selectedUser);
     if (!person) {
-        alert("No user selected for event");
-        return;
+      alert("No user selected for event");
+      return;
     }
     const userId = person.id;
     const eventId = selectedEvent.id;
 
     // Check if user has required skills
     if (!hasRequiredSkills(person.skills, selectedEvent.requiredSkills)) {
-        alert("User does not have the required skills for this event.");
-        return;
+      alert("User does not have the required skills for this event.");
+      return;
     }
     // Check if user has avaliability
     if (!isAvailable(person.availability, selectedEvent.date)) {
-          alert("User is not avaliable for this event.");
-          return;
-      }
+      alert("User is not avaliable for this event.");
+      return;
+    }
 
     // Send POST request to match user to event
     const response = await fetch('http://127.0.0.1:5000/api/match_user', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId, event_id: eventId }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId, event_id: eventId }),
     });
 
     const responseData = await response.json();
 
     if (response.ok) {
-        alert(responseData.message);
+      alert(responseData.message);
     } else {
-        alert(responseData.message);
+      alert(responseData.message);
     }
 
     try {
       const notificationData = {
-          userId: person.id, // Assuming the user's ID is available
-          eventName: selectedEvent.name,
-          eventDate: selectedEvent.date,
+        userId: person.id, // Assuming the user's ID is available
+        eventName: selectedEvent.name,
+        eventDate: selectedEvent.date,
       };
 
       const response = await fetch('http://127.0.0.1:5000/api/send-assignment-notification', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(notificationData),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(notificationData),
       });
 
       const result = await response.json();
       if (response.ok) {
-          console.log(result.msg);
-          alert("Volunteer successfully matched and notification sent.");
+        console.log(result.msg);
+        alert("Volunteer successfully matched and notification sent.");
       } else {
-          alert(result.msg);
+        alert(result.msg);
       }
-  } catch (error) {
+    } catch (error) {
       console.error("Failed to send notification:", error);
       alert("An error occurred while sending the notification.");
-  }
-};
+    }
+  };
 
 
   return (
@@ -156,10 +156,11 @@ const PeopleEventMatcher = () => {
 
               {/* Dropdown for user selection */}
               <select
-                onChange={(e) => 
-                  {const selectedUserEmail = e.target.value;
-                  setSelectedEvents(prev => ({ ...prev, [event.name]: selectedUserEmail }));}}
-              style={styles.dropdown}
+                onChange={(e) => {
+                  const selectedUserEmail = e.target.value;
+                  setSelectedEvents(prev => ({ ...prev, [event.name]: selectedUserEmail }));
+                }}
+                style={styles.dropdown}
               >
                 <option value="">Select a user</option>
                 {people.map((user) => (
