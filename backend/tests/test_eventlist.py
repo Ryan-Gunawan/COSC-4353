@@ -16,11 +16,11 @@ class testEventList(unittest.TestCase):
         self.client.testing = True
 
     @patch('os.path.exists')  # Mock data access
-    def test_get_volunteer_history(self, mock_get_history):
+    def test_get_event_list(self, mock_get_eventlist):
         with self.client as client:
             with client.session_transaction() as sess:
-                sess['user_id'] = "1" #Mock session
-            response = client.get('/api/volunteerhistory')
+                sess['id'] = "1" #Mock session
+            response = client.get('/api/eventlist')
             data = json.loads(response.data)
 
             expected_data = [
