@@ -65,6 +65,15 @@ class TestNotifications(unittest.TestCase):
 
     @patch('routes.load_notifications')
     @patch('routes.save_notifications')
+    def test_delete_notification_user_not_logged_in(self,  mock_save_notifications, mock_load_notifications):
+        # No session user_id, make DELETE request
+        response = self.client.delete('/api/notifications', json={'notification_id': '101'})
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn('User not logged in', response.get_json()['msg'])
+
+    @patch('routes.load_notifications')
+    @patch('routes.save_notifications')
     def test_send_assignment_notification_success(self, mock_save_notifications, mock_load_notifications):
         mock_load_notifications.return_value = {}  # No current notifications
         user_id = '1'

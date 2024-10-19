@@ -1,15 +1,16 @@
 import unittest
+import sys
+sys.path.append('../')
 from app import app
 import json
 import os
-import sys
-sys.path.append('../')
 from flask import Flask, session
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
+
+# Run test in backend for this to work and avoid open file error
 
 class TestUserInfo(unittest.TestCase):
     def setUp(self):
-
         app.config['TESTING'] = True
         app.config['SECRET_KEY'] = 'testkey' # for session testing
         self.client = app.test_client() # create a test client
@@ -30,3 +31,7 @@ class TestUserInfo(unittest.TestCase):
 
             # Assert that the returned data matches the expected event data
             self.assertEqual(data, expected_data)
+
+
+if __name__ == '__main__':
+    unittest.main()
