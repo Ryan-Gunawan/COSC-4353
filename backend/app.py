@@ -45,17 +45,17 @@ with app.app_context():
 # def handle_connect():
 #     print('socketio client connected')
 
-# @socketio.on('connect')
-# def on_connect():
-#     user_id = session.get('user_id')
-#     if user_id:
-#         join_room(user_id)
-#         print(f"User {user_id} joined room")
+@socketio.on('connect')
+def on_connect():
+    user_id = session.get('user_id')
+    if user_id:
+        join_room(user_id)
+        print(f"User {user_id} joined room")
 
-# @socketio.on('disconnect')
-# def handle_disconnect():
-#     print('socketio client disconnected')
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('socketio client disconnected')
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
-    # app.run(debug=True)
+    # socketio.run(app, debug=True)
+    app.run(debug=True)

@@ -111,14 +111,6 @@
             "message": "Event Reminder: 'Updated Event Name' is coming up in 24 hours!",
             "type": "reminder",
             "read": true
-        },
-        {
-            "id": 15,
-            "title": "Reminder",
-            "date": "10-18-24",
-            "message": "Event Reminder: 'Updated Event Name' is coming up in 24 hours!",
-            "type": "reminder",
-            "read": true
         }
     ],
     "2": [
