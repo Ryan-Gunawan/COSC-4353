@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash.debounce";
 import "./LoginRegister.css";
 import { FaLock, FaEnvelope } from "react-icons/fa";
-import socket from "../../socket.js";
 
 const LoginRegister = () => {
   const [action, setAction] = useState("");
@@ -77,7 +76,7 @@ const LoginRegister = () => {
     e.preventDefault(); // prevents page reloading
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/register", {
+      const response = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +88,6 @@ const LoginRegister = () => {
       if (response.status === 200) {
         alert(result.msg); // show success msg
         //alert("Registered successfully");
-        // socket.emit("join")
         navigate("/userprofile");
       }
       else if (result.msg === "An account with this email already exists") {
@@ -112,7 +110,7 @@ const LoginRegister = () => {
     e.preventDefault(); // prevents page reloading
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/login", {
+      const response = await fetch("http://localhost:5000/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +122,6 @@ const LoginRegister = () => {
       // Gets result from backend. If email and password are valid go to home otherwise send error msg
       const result = await response.json();
       if (result.success) {
-        // socket.emit("join")
         navigate("/home");
         // alert("Login successful");
       } else {

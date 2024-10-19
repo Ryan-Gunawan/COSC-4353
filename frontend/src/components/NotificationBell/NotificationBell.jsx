@@ -1,9 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { FaRegBell } from "react-icons/fa";
-import { io } from 'socket.io-client';
 import './NotificationBell.css'
 import axios from 'axios';
-import socket from "../../socket.js";
 
 
 const NotificationBell = () => {
@@ -20,7 +18,7 @@ const NotificationBell = () => {
     // };
     //
     // useEffect(() => {
-    //     socket.on('connect')
+    //     // socket.on('connect')
     //     checkUnreadNotifications();
     //
     //     // Listen on 'unread_notification'
