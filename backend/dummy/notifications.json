@@ -47,6 +47,14 @@
             "message": "Event assigned: Random Thing on 1-13-25",
             "type": "assignment",
             "read": true
+        },
+        {
+            "id": 7,
+            "title": "Assignment",
+            "date": "2024-10-18",
+            "message": "Event assigned: Random Thing on 1-13-25",
+            "type": "assignment",
+            "read": false
         }
     ],
     "2": [
@@ -57,5 +65,14 @@
             "read": true
         }
     ],
-    "8": []
+    "8": [
+        {
+            "id": 1,
+            "title": "Assignment",
+            "date": "2024-10-18",
+            "message": "Event assigned: Random Thing on 1-13-25",
+            "type": "assignment",
+            "read": false
+        }
+    ]
 }

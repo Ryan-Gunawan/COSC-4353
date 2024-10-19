@@ -245,26 +245,26 @@ def delete_notification():
     save_notifications(notifications)
 
     # check if there are any remaining unread notifs and emit to frontend
-    has_unread = has_unread_notificiations(user_id)
+    # has_unread = has_unread_notificiations(user_id)
     # socketio.emit('unread_notification', {'has_unread': has_unread}, to=str(user_id))
 
     return jsonify({'msg': 'Notification deleted successfully'}), 204
 
 # # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
-@app.route('/api/notifications/unread', methods=['GET'])
-def check_unread_notification():
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'No user logged in'}), 401
-    notifications = load_notifications()
-    user_notifications = notifications.get(user_id, [])
-    has_unread = any(notification['read'] == False for notification in user_notifications)
-    return jsonify({'has_unread': has_unread})
-
-def has_unread_notificiations(user_id):
-    notifications = load_notifications()
-    user_notifications = notifications.get(user_id, [])
-    return any(notification['read'] == False for notification in user_notifications)
+# @app.route('/api/notifications/unread', methods=['GET'])
+# def check_unread_notification():
+#     user_id = session.get('user_id')
+#     if not user_id:
+#         return jsonify({'error': 'No user logged in'}), 401
+#     notifications = load_notifications()
+#     user_notifications = notifications.get(user_id, [])
+#     has_unread = any(notification['read'] == False for notification in user_notifications)
+#     return jsonify({'has_unread': has_unread})
+#
+# def has_unread_notificiations(user_id):
+#     notifications = load_notifications()
+#     user_notifications = notifications.get(user_id, [])
+#     return any(notification['read'] == False for notification in user_notifications)
 
 
 # Send event assignment notification
@@ -361,7 +361,7 @@ def send_event_update_notifications(event_id):
             "id": len(notifications.get(user_id, [])) + 1,
             "title": "Update",
             "date": current_date,
-            "message": f"Event Update: '{event['name']}' s been updated, please check the event listing to view any changes.",
+            "message": f"Event Update: '{event['name']}' has been updated, please check the event listing to view any changes.",
             "type": "update",
             "read": False
         }
