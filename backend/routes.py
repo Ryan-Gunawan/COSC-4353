@@ -24,53 +24,51 @@ def get_users():
 
 @app.route("/api/eventlist", methods = ["GET"])
 def get_events():
-    #events = Event.query.all() This is for when the database is implemented
-    #result = [event.to_json() for event in events]
-    #return jsonify(result), 200
-    events = read_events_from_file()
-    return jsonify(events), 200
-
-def read_events_from_file():
-    if os.path.exists('dummy/events.json'):
-        with open('dummy/events.json', 'r') as f:
-            return json.load(f)  # Directly return the loaded list
-    return [] # Return an empty list if the file does not exist
-
-def add_events_to_file(events):
-    with open('dummy/events.json', 'w') as f:
-        json.dump(events, f, indent=4)
+    events = Event.query.all()
+    result = [event.to_json() for event in events]
+    return jsonify(result), 200
+    #events = read_events_from_file()
+    #return jsonify(events), 200
 
 # This is responsible for editing existing events
 @app.route("/api/eventlist/<int:event_id>", methods=["PUT"])
 def update_event(event_id):
     data = request.get_json()
-    events = read_events_from_file()
-    for event in events:
-        if event['id'] == event_id:
-            event.update(data)
-            break
-    add_events_to_file(events)
+    events = Event.query.get(event_id)
+    if event is None:
+        return jsonify({"msg": "Event not found"}), 404
+    event.name = data.get('name', event.name)
+    event.description = data.get('description', event.description)
+    event.location = data.get('location', event.location)
+    event.skills = data.get('skills', event.skills)
+    event.urgency = data.get('urgency', event.urgency)
+    event.date = data.get('date', event.date)
+    db.session.commit()
     return jsonify({"msg": "Event updated successfully"}), 200
 
 @app.route("/api/eventlist/<int:event_id>", methods=["DELETE"])
 def delete_event(event_id):
-    events = read_events_from_file()
-    event_to_delete = next((event for event in events if event['id'] == event_id), None)
-
-    if event_to_delete is None:
+    event = Event.query.get(event_id)
+    if event is None:
         return jsonify({"msg": "Event not found"}), 404
 
-    events = [event for event in events if event['id'] != event_id]
-    add_events_to_file(events)
+    db.session.delete(event)
+    db.session.commit()
     return jsonify({"msg": "Event deleted successfully"}), 200
 
 @app.route("/api/newevent", methods = ["POST"])
 def post_event():
     data = request.get_json()
-    print(data)
-    events = read_events_from_file()
-    events.append(data)
-    add_events_to_file(events)
+    new_event = Event(
+        name=data.get('name'),
+        description=data.get('description'),
+        location=data.get('location'),
+        skills=data.get('skills'),
+        urgency=data.get('urgency'),
+        date=data.get('date')
+    )
+    db.session.add(new_event)
+    db.session.commit()
     return jsonify({"msg": "Event created successfully"}), 201
 
 

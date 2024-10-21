@@ -6,6 +6,8 @@ from app import db
 
 
 class User(db.Model):
+    __tablename__ = 'user'
+    __table_args__ = {'extend_existing': True}  # Add this line to avoid redefining the table
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable = False)
     address1 = db.Column(db.String(100), nullable = False)
@@ -16,8 +18,15 @@ class User(db.Model):
     # skills
     # preferences
     # availability
+    def to_json(self):
+        return {
+            "id":id
+            # continue... later
+        }
 
 class Event(db.Model):
+    __tablename__ = 'event'
+    __table_args__ = {'extend_existing': True}  # Add this line to avoid redefining the table
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255), nullable=True)  # Adjust the length as needed
@@ -37,11 +46,3 @@ class Event(db.Model):
             "date": self.date.isoformat() if self.date else None  # Format date as string
         }
 
-
-# Converts objects to json for client to store in db
-# Probably need to edit to be able to convert any type of object (User or Event)
-def to_json(self):
-    return {
-        "id":self.id
-        # continue... later
-    }
