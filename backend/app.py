@@ -6,6 +6,8 @@ from flask_socketio import SocketIO, emit, join_room
 from datetime import timedelta
 
 app = Flask(__name__)
+
+# Configuration
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 socketio = SocketIO(app, cors_allowed_origins="*") # enable cors for localhost
 
@@ -13,10 +15,6 @@ app.secret_key = 'secretkey' # Required for sessions
 
 # users.db is the name of the database, can be renamed later.
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///default.db"
-app.config['SQLALCHEMY_BINDS'] = {
-    'users': 'sqlite:///users.db',
-    'events': 'sqlite:///events.db'
-}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # Allows cookies to be sent during local dev
 app.config['SESSION_COOKIE_SECURE'] = False #  Allows cookies to be sent over HTTP without security
@@ -34,10 +32,15 @@ app.config['SESSION_COOKIE_DOMAIN'] = None # Allows both localhost and 127.0.0.1
 
 db = SQLAlchemy(app)
 
-# runs routes.py
+
+# Import models after db is initialized to avoid circular imports
+
+# Initialize the session
+Session(app)
+
 import routes
 
-# creates all needed database tables
+# Create tables if they don't exist
 with app.app_context():
     db.create_all()
 

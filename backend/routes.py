@@ -1,7 +1,6 @@
 from app import app, db, socketio
 from flask import Flask, request, jsonify, session, redirect, url_for
 import json
-from models import User, Event
 import re
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -16,14 +15,19 @@ scheduler = BackgroundScheduler()
 
 # Get all users
 # Query all users from db and return them as a list
-@app.route("/api/users", methods = ["GET"]) # http://localhost/api/users url to see this table
+@app.route("/api/users", methods = ["GET"])
 def get_users():
+    from app import db
+    from models import User
+
     users = User.query.all()
     result = [user.to_json() for user in users]
     return jsonify(result), 200
 
 @app.route("/api/eventlist", methods = ["GET"])
 def get_events():
+    from app import db
+    from models import Event
     events = Event.query.all()
     result = [event.to_json() for event in events]
     return jsonify(result), 200
@@ -33,8 +37,10 @@ def get_events():
 # This is responsible for editing existing events
 @app.route("/api/eventlist/<int:event_id>", methods=["PUT"])
 def update_event(event_id):
+    from app import db
+    from models import Event
     data = request.get_json()
-    events = Event.query.get(event_id)
+    event = Event.query.get(event_id)
     if event is None:
         return jsonify({"msg": "Event not found"}), 404
     event.name = data.get('name', event.name)
@@ -48,6 +54,8 @@ def update_event(event_id):
 
 @app.route("/api/eventlist/<int:event_id>", methods=["DELETE"])
 def delete_event(event_id):
+    from app import db
+    from models import Event
     event = Event.query.get(event_id)
     if event is None:
         return jsonify({"msg": "Event not found"}), 404
@@ -58,6 +66,8 @@ def delete_event(event_id):
 
 @app.route("/api/newevent", methods = ["POST"])
 def post_event():
+    from app import db
+    from models import Event
     data = request.get_json()
     new_event = Event(
         name=data.get('name'),
@@ -92,11 +102,24 @@ def save_users(data):
 
 # Function to get user by email
 def get_user_by_email(email):
+    from app import db
+    from models import User
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return {
+            'id': user.id,
+            'email': user.email,
+            'password': user.password,  # Ensure passwords are hashed if possible
+            'admin': user.admin
+        }
+    return None
+    """
     data = load_users()
     for user in data['users']:
         if user['email'].lower() == email.lower(): # ignore case sensitivity
             return user
     return None
+    """
 
 # Function to add new user
 def add_user(email, password):
@@ -163,30 +186,50 @@ def register():
     return jsonify({"msg": "Registration successful"}), 200
 
 # Test login function
-@app.route("/api/login", methods = ["POST"])
+@app.route("/api/login", methods=["OPTIONS", "POST"])
 def login():
+    if request.method == "OPTIONS":
+        return '', 200
+    
+    session.clear()  # Clear any previous sessions, making sure no previous login info
+
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
 
-    # get user corresponding to email input
+    # Get user corresponding to email input
     user = get_user_by_email(email)
 
     # Checks if user exists and if email matches password
     if user is not None:
         if password == user['password']:
-            session['user_id'] = user['id'] # Store user ID in session
-            session['admin'] = user['admin'] # Store user admin status in session
+            session['user_id'] = user['id']  # Store user ID in session
+            session['admin'] = user['admin']  # Store user admin status in session
+
+            # Update the admin status in the database (optional based on your requirement)
+            from models import User
+            from app import db
+
+            # Find the user by user_id
+            db_user = User.query.get(user['id'])
+            if not db_user:
+                return jsonify({"error": "User not found"}), 404
+
+            # Update the 'admin' field to True in the database
+            db_user.admin = True  # Set the admin status to True (this step is optional)
+            db.session.commit()
+
             print(f"User logged in with ID: {session['user_id']}")
             print(f"User logged in with Admin Status: {session['admin']}")
+            print(f"Session Data: {session}")
+
             return jsonify({"success": True, "msg": "Login successful"}), 200
 
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
-
-# To view login route
+"""# To view login route
 @app.route("/api/login", methods = ["GET"])
 def login_users():
-    return "Hello, welcome to login"
+    return "Hello, welcome to login" """
 
 # Route to get session admin status
 @app.route('/api/isadmin', methods=['GET'])
@@ -195,8 +238,27 @@ def is_admin():
         print(f"User logged in with Admin Status: {session['admin']}")
         return jsonify({"admin": session['admin']}), 200
 
-    return jsonify({"admin": False}), 200# Default to false if admin is not in session
+    return jsonify({"admin": False}), 401# Default to false if admin is not in session
 
+"""@app.route('/api/isadmin', methods=['PUT'])
+def update_status():
+    # Check if the user is logged in
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "No user logged in"}), 401
+    # Import User model and db inside the function to avoid circular imports
+    from models import User
+    from app import db
+    # Find the user by user_id
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    # Update the 'admin' field to True
+    user.admin = True
+    # Commit the changes to the database
+    db.session.commit()
+    return jsonify({"msg": "Admin status updated successfully"}), 200
+    """
 
 ### Notification route and functions ###
 
@@ -252,6 +314,7 @@ def delete_notification():
 @app.route('/api/notifications/unread', methods=['GET'])
 def check_unread_notification():
     user_id = session.get('user_id')
+    print(f"Session Data at /api/notifications/unread: {session}")
     if not user_id:
         return jsonify({'error': 'No user logged in'}), 401
     notifications = load_notifications()
@@ -309,7 +372,7 @@ def send_assignment_notification():
 # Once we do database consider tracking whether a reminder has been sent for each user and event
 # To better handle repeat reminders and timings
 def send_reminder_notifications():
-    events = read_events_from_file()
+    events = get_events()
     notifications = load_notifications()
 
     now = datetime.now()
@@ -349,7 +412,7 @@ scheduler.start()
 # When admin updates an event all the assigned users are sent an update notification
 # may need to change to use a route: get request data with event_id
 def send_event_update_notifications(event_id):
-    events = read_events_from_file()
+    events = get_events()
     notifications = load_notifications()
     today = date.today()
     current_date = today.strftime("%m-%d-%y")
@@ -492,6 +555,11 @@ def match_user():
 
     return jsonify({'message': 'User matched successfully!'}), 200
 
+"""@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()  # Clears all session data
+    return jsonify({"success": True, "msg": "Logged out successfully"}), 200
+"""
 @socketio.on('join')
 def on_join():
     user_id = session.get('user_id')
