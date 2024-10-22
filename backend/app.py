@@ -11,7 +11,9 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 socketio = SocketIO(app, cors_allowed_origins="*") # enable cors for localhost
 
-app.secret_key = 'secretkey' # Required for sessions
+#app.secret_key = 'secretkey' # Required for sessions
+app.config['SESSION_TYPE'] = 'filesystem'  # This tells Flask-Session to use the file system for session storage
+app.config['SECRET_KEY'] = 'your_secret_key'
 
 # users.db is the name of the database, can be renamed later.
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///default.db"
