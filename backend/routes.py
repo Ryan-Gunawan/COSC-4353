@@ -1,11 +1,11 @@
-from app import app, db, socketio
+from app import app, db
 from flask import Flask, request, jsonify, session, redirect, url_for
 import json
 import re
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
-from flask_socketio import SocketIO, emit, join_room
+# from flask_socketio import SocketIO, emit, join_room
 
 USER_FILE = 'dummy/users.json'
 
@@ -15,7 +15,7 @@ scheduler = BackgroundScheduler()
 
 # Get all users
 # Query all users from db and return them as a list
-@app.route("/api/users", methods = ["GET"])
+@app.route("/api/users", methods = ["GET"]) # http://localhost/api/users url to see this table
 def get_users():
     from app import db
     from models import User
@@ -305,27 +305,26 @@ def delete_notification():
     save_notifications(notifications)
 
     # check if there are any remaining unread notifs and emit to frontend
-    has_unread = has_unread_notificiations(user_id)
-    socketio.emit('unread_notification', {'has_unread': has_unread}, to=str(user_id))
+    # has_unread = has_unread_notificiations(user_id)
+    # socketio.emit('unread_notification', {'has_unread': has_unread}, to=str(user_id))
 
     return jsonify({'msg': 'Notification deleted successfully'}), 204
 
 # # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
-@app.route('/api/notifications/unread', methods=['GET'])
-def check_unread_notification():
-    user_id = session.get('user_id')
-    print(f"Session Data at /api/notifications/unread: {session}")
-    if not user_id:
-        return jsonify({'error': 'No user logged in'}), 401
-    notifications = load_notifications()
-    user_notifications = notifications.get(user_id, [])
-    has_unread = any(notification['read'] == False for notification in user_notifications)
-    return jsonify({'has_unread': has_unread})
-
-def has_unread_notificiations(user_id):
-    notifications = load_notifications()
-    user_notifications = notifications.get(user_id, [])
-    return any(notification['read'] == False for notification in user_notifications)
+# @app.route('/api/notifications/unread', methods=['GET'])
+# def check_unread_notification():
+#     user_id = session.get('user_id')
+#     if not user_id:
+#         return jsonify({'error': 'No user logged in'}), 401
+#     notifications = load_notifications()
+#     user_notifications = notifications.get(user_id, [])
+#     has_unread = any(notification['read'] == False for notification in user_notifications)
+#     return jsonify({'has_unread': has_unread})
+#
+# def has_unread_notificiations(user_id):
+#     notifications = load_notifications()
+#     user_notifications = notifications.get(user_id, [])
+#     return any(notification['read'] == False for notification in user_notifications)
 
 
 # Send event assignment notification
@@ -363,7 +362,7 @@ def send_assignment_notification():
     # Save the updated notifications
     save_notifications(notifications)
 
-    socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+    # socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
 
     print(f"Notification sent to user {user_id} for event '{event_name}'.")
     return jsonify({'msg': 'Notification sent successfully'}), 200
@@ -398,7 +397,7 @@ def send_reminder_notifications():
                     "read": False
                 }
                 notifications[user_id].append(new_notification)
-                socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+                # socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
                 print("Appended notification successfully")
     save_notifications(notifications)
     print("Sent reminders for upcoming events")
@@ -422,12 +421,12 @@ def send_event_update_notifications(event_id):
             "id": len(notifications.get(user_id, [])) + 1,
             "title": "Update",
             "date": current_date,
-            "message": f"Event Update: '{event['name']}' s been updated, please check the event listing to view any changes.",
+            "message": f"Event Update: '{event['name']}' has been updated, please check the event listing to view any changes.",
             "type": "update",
             "read": False
         }
         notifications[user_id].append(new_notification)
-        socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+        # socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
     save_notifications(notifications)
     print("Sent update")
 
@@ -555,16 +554,11 @@ def match_user():
 
     return jsonify({'message': 'User matched successfully!'}), 200
 
-"""@app.route("/api/logout", methods=["POST"])
-def logout():
-    session.clear()  # Clears all session data
-    return jsonify({"success": True, "msg": "Logged out successfully"}), 200
-"""
-@socketio.on('join')
-def on_join():
-    user_id = session.get('user_id')
-    if user_id:
-        join_room(user_id)
-        print(f"User {user_id} has joined room {user_id}")
-    else:
-        print("No user_id in session. User is not logged in.")
+# @socketio.on('join')
+# def on_join():
+#     user_id = session.get('user_id')
+#     if user_id:
+#         join_room(user_id)
+#         print(f"User {user_id} has joined room {user_id}")
+#     else:
+#         print("No user_id in session. User is not logged in.")

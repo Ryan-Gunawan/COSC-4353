@@ -1,15 +1,16 @@
 import unittest
+import sys
+sys.path.append('../')
 from app import app
 import json
 import os
-import sys
-sys.path.append('../')
 from flask import Flask, session
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
+
+# Run test in backend for this to work and avoid open file error
 
 class TestUserInfo(unittest.TestCase):
     def setUp(self):
-
         app.config['TESTING'] = True
         app.config['SECRET_KEY'] = 'testkey' # for session testing
         self.client = app.test_client() # create a test client
@@ -26,7 +27,11 @@ class TestUserInfo(unittest.TestCase):
             # Expected volunteer history data
             expected_data = [{"assignedUsers":[],"date":"2024-10-15","description":"Join us for a day of insightful talks and networking with industry leaders in technology.","id":1,"location":"San Francisco, CA","name":"Tech Conference 2024"},
                             {"assignedUsers":[],"date":"2024-09-25","description":"A weekend filled with live music performances from top artists around the world.","id":2,"location":"Austin, TX","name":"Music Festival"},
-                            {"assignedUsers":[],"date":"2024-10-08T16:33:02","description":"$3.50 an hour","id":4,"location":"Houston","name":"Helping Teddy with his project","skills":["problemsolver"],"urgency":"3"}]
+                            {"assignedUsers":[],"date":"2024-10-08T16:33:02","description":"$3.50 an hour","id":4,"location":"Houston","name":"Helping Teddy with his project","skills":["Problem Solver"],"urgency":"3"}]
 
             # Assert that the returned data matches the expected event data
             self.assertEqual(data, expected_data)
+
+
+if __name__ == '__main__':
+    unittest.main()

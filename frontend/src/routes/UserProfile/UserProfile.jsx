@@ -6,7 +6,7 @@ import "./userprofile.css";
 function UserProfile() {
 
     const [userInfo, setUserInfo] = useState({
-        id:'',
+        id: '',
         fullname: '',
         address1: '',
         address2: '',
@@ -20,13 +20,13 @@ function UserProfile() {
     })
 
     // Temporary constant while user is editing
-    const[formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
         selectedDate: ""
 
     })
 
     useEffect(() => {
-        fetch("http://127.0.0.1:5000/api/userprofile", {
+        fetch("http://localhost:5000/api/userprofile", {
             method: 'GET',
             credentials: 'include',
         })
@@ -75,7 +75,7 @@ function UserProfile() {
     // useEffect(() => {
     //     console.log("Skills updated:", userInfo.skills);
     // }, [userInfo.skills]);
-    
+
     // Pop up selected skills
     const handleMultipleChange = (e) => {
         const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value); // Convert selected options to an array of values
@@ -85,7 +85,7 @@ function UserProfile() {
         }));
         console.log("Updated skills:", selectedOptions); // Log the selected skills
     };
-    
+
     // pop up selected dates
     const handleDateChange = (e) => {
         const date = e.target.value;
@@ -100,31 +100,31 @@ function UserProfile() {
 
     // Delete selected skills/availability
     const handleRemoveItem = (type, itemToRemove) => {
-    setUserInfo((prevUserInfo) => ({
-        ...prevUserInfo,
-        [type]: prevUserInfo[type].filter(item => item !== itemToRemove),
-    }));
+        setUserInfo((prevUserInfo) => ({
+            ...prevUserInfo,
+            [type]: prevUserInfo[type].filter(item => item !== itemToRemove),
+        }));
     };
-    
+
     // Handle save button
     const saveInfo = (e) => {
         e.preventDefault();
         // try {
-          fetch(`http://127.0.0.1:5000/api/userprofile/${userInfo.id}`, {
+        fetch(`http://127.0.0.1:5000/api/userprofile/${userInfo.id}`, {
             method: 'PUT',
             headers: {
-              'Content-Type': 'application/json',
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(userInfo),
-          })
-          .then((response) => {
-            if (response.ok) {
-                alert('User info updated successfully');
-            } else {
-                alert('Failed to update user info');
-            }
         })
-      };
+            .then((response) => {
+                if (response.ok) {
+                    alert('User info updated successfully');
+                } else {
+                    alert('Failed to update user info');
+                }
+            })
+    };
     return (
         <>
             <Navbar />
@@ -211,7 +211,7 @@ function UserProfile() {
                         <div className="pad-10">
                             <label>Zip code</label>
                             <label className="required">*</label><br />
-                            <input className="inputbox" type="text" name="zipcode" maxLength="9" minLength="5" require value={userInfo.zipcode} onChange={handleChange}d></input>
+                            <input className="inputbox" type="text" name="zipcode" maxLength="9" minLength="5" require value={userInfo.zipcode} onChange={handleChange} d></input>
                         </div>
                         <div className="pad-10">
                             <label>Skills</label>
@@ -234,10 +234,10 @@ function UserProfile() {
 
                             <div className="selected-skills">
                                 {Array.isArray(userInfo.skills) && userInfo.skills.map((skill, index) => (
-                                <div key={index} className="skill-item">
-                                    <p>{skill}</p>
-                                    <button type="button" className="remove-skill" onClick={() => handleRemoveItem('skills', skill)}>x</button>
-                                </div>
+                                    <div key={index} className="skill-item">
+                                        <p>{skill}</p>
+                                        <button type="button" className="remove-skill" onClick={() => handleRemoveItem('skills', skill)}>x</button>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -251,10 +251,10 @@ function UserProfile() {
                             <input className="inputbox" type="date" multiple required value={formData.selectedDate} onChange={handleDateChange}></input>
                             <div className="selected-availability">
                                 {userInfo.availability.map((date, index) => (
-                                <div key={index} className="availability-item">
-                                    {date}
-                                    <button type="button" className="remove-availability" onClick={() => handleRemoveItem('availability', date)}>x</button>
-                                </div>
+                                    <div key={index} className="availability-item">
+                                        {date}
+                                        <button type="button" className="remove-availability" onClick={() => handleRemoveItem('availability', date)}>x</button>
+                                    </div>
                                 ))}
                             </div>
                         </div>

@@ -10,7 +10,7 @@ const NotificationCard = ({ title, date, message, onDelete, onMarkRead }) => {
             </div>
             <div className="notification-actions">
                 <button onClick={onDelete} className="delete-btn">Delete</button>
-                <button onClick={onMarkRead} className="mark-read-btn">Mark as Read</button>
+                {/* <button onClick={onMarkRead} className="mark-read-btn">Mark as Read</button>*/}
             </div>
         </div>
     )
