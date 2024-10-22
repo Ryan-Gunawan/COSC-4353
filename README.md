@@ -95,12 +95,31 @@ To see that it's working you can go to the url: http://127.0.0.1:5000/api/users
 
 ***Teddy's note***
 Run the backend server with bash:
---- cd backend
---- python -m flask run
+    --- cd backend
+    --- python -m flask run
 Terminate program to reflect new changes to the code.
 
 For frontend development:
-Activate the virtual environment, which has all the requiremnet installed.
---- venv\Scripts\activate
-Then in the powershell:
---- npm run dev
+    Activate the virtual environment, which has all the requiremnet installed.
+        --- venv\Scripts\activate
+    Then in the powershell:
+        --- npm run dev
+
+For database dev:
+    To activate flask shell: 
+        --- $ python -m flask shell
+
+    To see table names:
+        --- from app import db
+            inspector = db.inspect(db.engine)
+            tables = inspector.get_table_names()
+            print(tables)
+            
+    To see columns of a specific table (e.g., 'event'):
+        --- print(inspector.get_columns('event'))
+
+    To see all the contents of the table:
+        from app import Event
+        events = Event.query.all()
+        for event in events:
+            print(event)
