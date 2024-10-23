@@ -2,7 +2,7 @@ from app import db
 from sqlalchemy.types import JSON, Text
 import json
 
-# Here each class represents objects that will be stored in the database
+# Here each class represents objects that will be stored in the database as tables
 # and we specify what the attributes are and whether
 # they are required or optional.
 
@@ -14,12 +14,12 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)  # In practice, store hashed passwords
     admin = db.Column(db.Boolean, default=False)
-    fullname = db.Column(db.String(100), nullable=False)
-    address1 = db.Column(db.String(100), nullable=False)
+    fullname = db.Column(db.String(100), nullable=True)
+    address1 = db.Column(db.String(100), nullable=True)
     address2 = db.Column(db.String(100), nullable=True)
-    city = db.Column(db.String(50), nullable=False)
-    state = db.Column(db.String(2), nullable=False)
-    zipcode = db.Column(db.String(10), nullable=False)
+    city = db.Column(db.String(50), nullable=True)
+    state = db.Column(db.String(2), nullable=True)
+    zipcode = db.Column(db.String(5), nullable=True)
     skills = db.Column(JSON, nullable=True)
     preference = db.Column(db.String(255), nullable=True)
     availability = db.Column(JSON, nullable=True)

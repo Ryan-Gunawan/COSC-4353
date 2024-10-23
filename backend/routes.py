@@ -135,16 +135,6 @@ def add_user(email, password):
     save_users(data)
     return new_user
 
-# I don't think we even use this. Just get the session user_id within whatever function needs it
-# Return the logged in user's ID
-# @app.route("/api/getloggedinuser", methods = ["GET"])
-# def get_logged_in_user():
-#     user_id = session['user_id']
-#     if user_id:
-#         return user_id
-#     else:
-#         return None
-
 # Functions to validate registration inputs
 def validate_email(email):
     email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
@@ -154,18 +144,10 @@ def validate_email(email):
 def validate_password(password):
     return len(password) > 0 and len(password) <= 128
 
-# Functions to validate login inputs
-# I think this is not even used?
-# def validate_login_email(email):
-#     valid = True
-#     email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-#     if re.match(email_regex, email) is not None:
-#         valid = False
-#     return valid
-
 # Register validation route
 @app.route("/api/register", methods = ["POST"])
 def register():
+    from models import User
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
@@ -182,7 +164,14 @@ def register():
         return jsonify({"msg": "Invalid password"}), 400
 
     # if validations pass add user and return success response
-    add_user(email, password)
+    # add_user(email, password)
+    new_user = User(
+        email=email,
+        password=password,
+        admin=False
+    )
+    db.session.add(new_user)
+    db.session.commit()
     return jsonify({"msg": "Registration successful"}), 200
 
 # Test login function
@@ -190,7 +179,7 @@ def register():
 def login():
     if request.method == "OPTIONS":
         return '', 200
-    
+
     session.clear()  # Clear any previous sessions, making sure no previous login info
 
     data = request.get_json()
@@ -226,6 +215,7 @@ def login():
             return jsonify({"success": True, "msg": "Login successful"}), 200
 
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
+
 """# To view login route
 @app.route("/api/login", methods = ["GET"])
 def login_users():
@@ -553,12 +543,3 @@ def match_user():
         json.dump(users_data, f, indent=4)
 
     return jsonify({'message': 'User matched successfully!'}), 200
-
-# @socketio.on('join')
-# def on_join():
-#     user_id = session.get('user_id')
-#     if user_id:
-#         join_room(user_id)
-#         print(f"User {user_id} has joined room {user_id}")
-#     else:
-#         print("No user_id in session. User is not logged in.")
