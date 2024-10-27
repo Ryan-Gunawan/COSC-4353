@@ -2,6 +2,7 @@ from flask import Flask, session
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_migrate import Migrate
 from datetime import timedelta
 
 app = Flask(__name__)
@@ -29,9 +30,11 @@ app.config['SESSION_COOKIE_DOMAIN'] = None # Allows both localhost and 127.0.0.1
 # Session(app)
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db) # Set up migration
 
 
 # Import models after db is initialized to avoid circular imports
+from models import User, Event
 
 # Initialize the session
 Session(app)

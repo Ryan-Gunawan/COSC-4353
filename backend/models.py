@@ -38,7 +38,8 @@ class User(db.Model):
             "skills": self.skills if self.skills else [],
             "preference": self.preference or "",
             "availability": self.availability if self.availability else [],
-            "volunteer": self.volunteer if self.volunteer else []
+            "volunteer": self.volunteer if self.volunteer else [],
+            "admin": self.admin
         }
 
     def __repr__(self):
