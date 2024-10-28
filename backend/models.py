@@ -1,4 +1,5 @@
 from app import db
+import bcrypt
 from sqlalchemy.types import JSON, Text
 import json
 
@@ -41,6 +42,15 @@ class User(db.Model):
             "volunteer": self.volunteer if self.volunteer else [],
             "admin": self.admin
         }
+
+    # Has the password with bcrypt and store it
+    def set_password(self, password):
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        self.password = hashed_password.decode('utf-8')
+
+    # Check if password provided at login matched the stored hashed password
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
     def __repr__(self):
         return f"<User {self.fullname}>"

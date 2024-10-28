@@ -1,5 +1,6 @@
 alembic==1.13.3
 APScheduler==3.10.4
+bcrypt==4.2.0
 bidict==0.23.1
 blinker==1.8.2
 cachelib==0.13.0

@@ -106,12 +106,13 @@ def get_user_by_email(email):
     from models import User
     user = User.query.filter_by(email=email).first()
     if user:
-        return {
-            'id': user.id,
-            'email': user.email,
-            'password': user.password,  # Ensure passwords are hashed if possible
-            'admin': user.admin
-        }
+        return user
+        # return {
+        #     'id': user.id,
+        #     'email': user.email,
+        #     'password': user.password,
+        #     'admin': user.admin
+        # }
     return None
     """
     data = load_users()
@@ -170,6 +171,7 @@ def register():
         password=password,
         admin=False
     )
+    new_user.set_password(password) # hash password
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"msg": "Registration successful"}), 200
@@ -177,6 +179,7 @@ def register():
 # Test login function
 @app.route("/api/login", methods=["OPTIONS", "POST"])
 def login():
+    from models import User
     if request.method == "OPTIONS":
         return '', 200
 
@@ -191,29 +194,16 @@ def login():
 
     # Checks if user exists and if email matches password
     if user is not None:
-        if password == user['password']:
-            session['user_id'] = user['id']  # Store user ID in session
-            session['admin'] = user['admin']  # Store user admin status in session
+        if user.check_password(password): # Compare login pass with hashed pass in db
 
-            # Update the admin status in the database (optional based on your requirement)
-            from models import User
-            from app import db
-
-            # Find the user by user_id
-            db_user = User.query.get(user['id'])
-            if not db_user:
-                return jsonify({"error": "User not found"}), 404
-
-            # Update the 'admin' field to True in the database
-            db_user.admin = True  # Set the admin status to True (this step is optional)
-            db.session.commit()
+            # Store user id and admin status in session
+            session['user_id'] = user.id
+            session['admin'] = user.admin
 
             print(f"User logged in with ID: {session['user_id']}")
-            print(f"User logged in with Admin Status: {session['admin']}")
             print(f"Session Data: {session}")
 
             return jsonify({"success": True, "msg": "Login successful"}), 200
-
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
 
 """# To view login route
@@ -227,7 +217,6 @@ def is_admin():
     if 'admin' in session:
         print(f"User logged in with Admin Status: {session['admin']}")
         return jsonify({"admin": session['admin']}), 200
-
     return jsonify({"admin": False}), 401# Default to false if admin is not in session
 
 """@app.route('/api/isadmin', methods=['PUT'])
