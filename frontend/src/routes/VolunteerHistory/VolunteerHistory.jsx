@@ -19,7 +19,7 @@ function VolunteerHistory() {
                 return response.json();
             })
             .then(data => {
-                setUserInfo(data[0]);
+                setUserInfo(data);
             })
             .catch(error => console.error('Error:', error));
     }, []);

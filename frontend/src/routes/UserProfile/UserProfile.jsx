@@ -38,9 +38,14 @@ function UserProfile() {
                 return response.json();
             })
             .then(data => {
-                setUserInfo(data[0]);
+                const transformedData = {
+                    ...data,
+                    availability: typeof data.availability === 'string' ? JSON.parse(data.availability) : data.availability,
+                    skills: typeof data.skills === 'string' ? JSON.parse(data.skills) : data.skills
+                };
+                setUserInfo(transformedData);
                 setFormData({
-                    selectedDate: data[0].availability[0] || ""
+                    selectedDate: data.availability[0] || ""
                 })
 
             })
@@ -56,25 +61,6 @@ function UserProfile() {
             [name]: value,
         }));
     };
-
-    // const handleMultipleChange = (item) => {
-    //     console.log("item:", item)
-    // if (!userInfo.skills.includes(item)) {
-    //     const old_skills = userInfo.skills;
-    //     console.log("skills:", userInfo.skills)
-    //     const updatedSkills = [old_skills, item]
-    //     console.log("UpdatedSkills:", updatedSkills)
-    //     setUserInfo((prevUserInfo) => ({
-    //         ...prevUserInfo,
-    //         skills: [...prevUserInfo.skills, item], 
-    //     }));
-    // }
-    //     console.log("log after", userInfo.skills)
-    // };
-
-    // useEffect(() => {
-    //     console.log("Skills updated:", userInfo.skills);
-    // }, [userInfo.skills]);
 
     // Pop up selected skills
     const handleMultipleChange = (e) => {

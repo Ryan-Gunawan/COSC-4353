@@ -411,80 +411,52 @@ def send_event_update_notifications(event_id):
 
 @app.route("/api/volunteerhistory", methods = ["GET"])
 def get_history():
+    from app import db
+    from models import User, Event
     # session['user_id'] = "1" #manually
     user_id = session['user_id']
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
-    
-    # Get volunteerhistory from users
-    history = []
-    if os.path.exists('dummy/users.json'):
-        with open('dummy/users.json', 'r') as f:
-            data = json.load(f)
-            users_info = data.get('users', [])
-            
-    for user in users_info:
-        if user['id'] == user_id:
-            history = user.get('volunteer', [])
-            break
-    
-    # Get event info from databases
-    event_data = []
-    if os.path.exists('dummy/events.json'):
-        with open('dummy/events.json', 'r') as f:
-            event_data = json.load(f)
-    
- 
-    event_info = []
-    job = 0
-    for event in event_data:
-        if job < len(history) and event['id'] == history[job]:
-            event_info.append(event)
-            job += 1
+    # Get volunteer list from user
+    user_info = User.query.get(user_id)
+    volunteer_info = json.loads(user_info.volunteer)
+    # Get event info
+    retrieve_event = Event.query.filter(Event.id.in_(volunteer_info)).all()
+    event_info = [event.to_json() for event in retrieve_event]
 
     return jsonify(event_info), 200
 
 @app.route("/api/userprofile", methods = ["GET"])
 def get_userinfo():
-    # session['user_id'] = "2" #manually
-    user_id = session['user_id']
-    if not user_id:
-        return jsonify({'msg': 'User not logged in'}), 401
-    info = []
-    if os.path.exists('dummy/users.json'):
-        with open('dummy/users.json', 'r') as f:
-            data = json.load(f)
-            users_info = data.get('users', [])
-            
-            for user in users_info:
-                if user['id'] == user_id:
-                    info.append(user) #Return as array
-                    break
+    from app import db
+    from models import User
+    # session['user_id'] = "1" #manually
 
+    user_id = session['user_id']
+    retrieve = User.query.get(user_id)
+    info = retrieve.to_json()
+    
     return jsonify(info), 200
 
 @app.route("/api/userprofile/<int:user_id>", methods=["PUT"])
 def update_userinfo(user_id):
+    from app import db
+    from models import User
+    # session['user_id'] = "1" #manually
+
     data = request.get_json()
-    old_data = []
-
-    # Get old data
-    if os.path.exists('dummy/users.json'):
-        with open('dummy/users.json', 'r') as f:
-            old_data = json.load(f)
-
-    users = old_data.get('users', [])
-
-    for user in users:
-        if user['id'] == str(user_id):
-            user.update(data)
-    
-    # Write data into json
-    with open('dummy/users.json', 'w') as f:
-        json.dump(old_data, f, indent=4)
-        
+    retrieve = User.query.get(user_id)
+    retrieve.fullname = data.get('fullname', retrieve.fullname)
+    retrieve.address1 = data.get('address1', retrieve.address1)
+    retrieve.address2 = data.get('address2', retrieve.address2)
+    retrieve.city = data.get('city', retrieve.city)
+    retrieve.state = data.get('state', retrieve.state)
+    retrieve.zipcode = data.get('zipcode', retrieve.zipcode)
+    retrieve.skills = data.get('skills', retrieve.skills)
+    retrieve.preference = data.get('preference', retrieve.preference)
+    retrieve.availability = data.get('availability', retrieve.availability)
+    db.session.commit()
     return jsonify({"msg": "User info updated successfully"}), 200
-
 
 
 @app.route("/api/usersList", methods=["GET"])
