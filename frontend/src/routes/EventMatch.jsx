@@ -33,15 +33,19 @@ const PeopleEventMatcher = () => {
 
     try {
       const response = await fetch('http://127.0.0.1:5000/api/match_user', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ user_id: userId, event_id: eventId }),
       });
 
-      const responseData = await response.json();
-      alert(responseData.message);
+      const updateResult = await response.json();
+      if (response.ok) {
+        console.log(updateResult.msg);
+      } else {
+        alert(updateResult.msg);
+      }
 
       const notificationData = {
         userId: person.id,
