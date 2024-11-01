@@ -456,48 +456,42 @@ def update_userinfo(user_id):
     return jsonify({"msg": "User info updated successfully"}), 200
 
 
-@app.route("/api/usersList", methods=["GET"])
-def get_userList():
-    users = read_users_from_file()
-    return jsonify(users), 200
+##@app.route("/api/usersList", methods=["GET"])
+#def get_userList():
+#    from app import db
+#    from models import User
+    
+#    users = User.query.all()
+#    lists = [users.to_json() for users in users]
 
-def read_users_from_file():
-    if os.path.exists('dummy/users.json'):
-        with open('dummy/users.json', 'r') as f:
-            return json.load(f)
-    return []
+#    return jsonify(lists), 200
+#    users = read_users_from_file()
+    ##return jsonify(users), 200
+
+##def read_users_from_file():
+#   if os.path.exists('dummy/users.json'):
+#       with open('dummy/users.json', 'r') as f:
+#           return json.load(f)
+##    return []
 
 
-@app.route('/api/match_user', methods=['POST'])
+@app.route('/api/match_user', methods=['PUT'])
 def match_user():
+    from app import db
+
     # Get JSON data from the request
     data = request.get_json()
 
-    user_id = data.get('user_id')  # The ID of the user to match
-    event_id = data.get('event_id')  # The ID of the event to match with
-
-    # Load user data from the JSON file
-    with open('dummy/users.json', 'r') as f:
-        users_data = json.load(f)
-
-    # Find the user by ID
-    user_found = False
-    for user in users_data['users']:
-        if user['id'] == user_id:
-            # Check if the user is already matched to the event
-            if event_id in user.get('volunteer', []):
-                return jsonify({'message': 'Volunteer has already been matched to this event.'}), 400
-
-            # Add event ID to volunteer array
-            user.setdefault('volunteer', []).append(event_id)
-            user_found = True
-            break
-
-    if not user_found:
-        return jsonify({'message': 'User not found.'}), 404
-
-    # Save the updated user data back to the JSON file
-    with open('dummy/users.json', 'w') as f:
-        json.dump(users_data, f, indent=4)
-
-    return jsonify({'message': 'User matched successfully!'}), 200
+    user = data.get('user_id')  # The ID of the user to match
+    event = data.get('event_id')  # The ID of the event to match with
+    if event is None:
+        return jsonify({"msg": "Event not found"}), 404
+    if user is None:
+        return jsonify({"msg": "User not found"}), 404
+    
+    if event not in user.volunteer:
+        user.volunteer.append(event)
+        db.session.commit()
+        return jsonify({"msg": "Event added to volunteer list", "volunteer": user.volunteer}), 200
+    else:
+        return jsonify({"msg": "Event already in volunteer list", "volunteer": user.volunteer}), 200
