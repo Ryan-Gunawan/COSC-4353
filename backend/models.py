@@ -30,7 +30,7 @@ class User(db.Model):
     skills = db.Column(JSON, nullable=True)
     preference = db.Column(db.String(255), nullable=True)
     availability = db.Column(JSON, nullable=True)
-    volunteer = db.Column(JSON, nullable=True)
+    volunteer = db.relationship('Event', secondary=event_user, backref='users', overlaps="users, volunteer") # Volunteer history
 
     def to_json(self):
         return {
@@ -45,7 +45,8 @@ class User(db.Model):
             "skills": self.skills if self.skills else [],
             "preference": self.preference or "",
             "availability": self.availability if self.availability else [],
-            "volunteer": self.volunteer if self.volunteer else [],
+            # "volunteer": self.volunteer if self.volunteer else [],
+            "volunteer": [event.name for event in self.volunteer],
             "admin": self.admin
         }
 
@@ -71,7 +72,7 @@ class Event(db.Model):
     skills = db.Column(Text, nullable=True)  # Store as a JSON string
     urgency = db.Column(db.String(10), nullable=True)  # e.g., "HIGH", "MEDIUM", "LOW"
     date = db.Column(db.String(20), nullable=False)
-    assigned_users = db.relationship('User', secondary=event_user, backref='events') # Many-to-many relationship with User
+    assigned_users = db.relationship('User', secondary=event_user, backref='events', overlaps="users, volunteer") # Many-to-many relationship with User
 
     def to_json(self):
         return {

@@ -31,8 +31,6 @@ def get_events():
     events = Event.query.all()
     result = [event.to_json() for event in events]
     return jsonify(result), 200
-    #events = read_events_from_file()
-    #return jsonify(events), 200
 
 # This is responsible for editing existing events
 @app.route("/api/eventlist/<int:event_id>", methods=["PUT"])
@@ -478,50 +476,29 @@ def update_userinfo(user_id):
 @app.route('/api/match_user', methods=['PUT'])
 def match_user():
     from app import db
+    from models import User, Event
+
     # Get JSON data from the request
     data = request.get_json()
+    user_id = data.get('user_id')  # The ID of the user to match
+    event_id = data.get('event_id')  # The ID of the event to match with
 
-    user = data.get('user_id')  # The ID of the user to match
-    event = data.get('event_id')  # The ID of the event to match with
+    if event_id is None:
+        return jsonify({"msg": "Event ID is required"}), 404
+    if user_id is None:
+        return jsonify({"msg": "User ID is required"}), 404
+
+    user = User.query.get(user_id)
+    event = Event.query.get(event_id)
+
     if event is None:
         return jsonify({"msg": "Event not found"}), 404
     if user is None:
         return jsonify({"msg": "User not found"}), 404
 
-    if event not in user.volunteer:
-        user.volunteer.append(event)
+    if user not in event.assigned_users:
+        event.assigned_users.append(user) # automatically appends to user.volunteer since they're connected on db
         db.session.commit()
-        return jsonify({"msg": "Event added to volunteer list", "volunteer": user.volunteer}), 200
+        return jsonify({"msg": "Event added to volunteer list"}), 200
     else:
-        return jsonify({"msg": "Event already in volunteer list", "volunteer": user.volunteer}), 200
-
-    # from models import User, Event
-    #
-    # # Get JSON data from the request
-    # data = request.get_json()
-    # user_id = data.get('user_id')  # The ID of the user to match
-    # event_id = data.get('event_id')  # The ID of the event to match with
-    #
-    # if event_id is None:
-    #     return jsonify({"msg": "Event ID is required"}), 404
-    # if user_id is None:
-    #     return jsonify({"msg": "User ID is required"}), 404
-    #
-    # user = User.query.get(user_id)
-    # event = Event.query.get(event_id)
-    #
-    # if event is None:
-    #     return jsonify({"msg": "Event not found"}), 404
-    # if user is None:
-    #     return jsonify({"msg": "User not found"}), 404
-    # 
-    # if event_id not in user.volunteer:
-    #     user.volunteer.append(event)
-    #     db.session.commit()
-    # if user not in event.assigned_users:
-    #     event.assigned_users.append(user)
-    #     db.session.commit()
-    #
-    #     return jsonify({"msg": "Event added to volunteer list", "volunteer": user.volunteer}), 200
-    # else:
-    #     return jsonify({"msg": "Event already in volunteer list", "volunteer": user.volunteer}), 200
+        return jsonify({"msg": "Event already in volunteer list"}), 200
