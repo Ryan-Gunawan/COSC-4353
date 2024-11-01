@@ -4,159 +4,102 @@ import Footer from '../components/Footer/Footer';
 
 const PeopleEventMatcher = () => {
   const [people, setPeople] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [selectedUserEmail, setSelectedUserEmail] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      name: "Community Clean-Up",
+      date: "2024-12-01",
+      location: "City Park",
+      description: "A community event to clean up the local park.",
+      requiredSkills: ["teamwork", "endurance"],
+    }
+  ]);
+  const [selectedUsers, setSelectedUsers] = useState({});
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
+    // Fetch additional events from the database
     fetch("http://127.0.0.1:5000/api/eventlist")
       .then((response) => response.json())
-      .then((data) => setEvents(data))
+      .then((data) => setEvents((prevEvents) => [...prevEvents, ...data]))
       .catch((error) => console.error("Error fetching events:", error));
 
+    // Fetch users from the /api/userslist endpoint
     fetch("http://127.0.0.1:5000/api/users")
       .then((response) => response.json())
       .then((data) => setPeople(data))
       .catch((error) => console.error("Error fetching users:", error));
   }, []);
 
-  const handleUserSelect = (email) => setSelectedUserEmail(email);
-  const handleEventSelect = (eventId) => setSelectedEvent(events.find(event => event.id === eventId));
+  // Handles confirm button press for matching a user to an event
+  const handleConfirm = async (eventId) => {
+    const selectedUserEmail = selectedUsers[eventId];
+    if (!selectedUserEmail) {
+      alert("No user selected for event");
+      return;
+    }
 
-  const handleConfirm = async () => {
-    if (!selectedEvent) return alert("Please select an event");
-    const person = people.find(p => p.email === selectedUserEmail);
-    if (!person) return alert("No user selected for event");
+    const selectedUser = people.find(person => person.email === selectedUserEmail);
+    if (!selectedUser) {
+      alert("User not found");
+      return;
+    }
 
-    const userId = person.id;
-    const eventId = selectedEvent.id;
+    // Send PUT request to match user to event
+    const response = await fetch('http://127.0.0.1:5000/api/match_user', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: selectedUser.id, event_id: eventId })
+    });
 
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/match_user', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId, event_id: eventId }),
-      });
-
-      const updateResult = await response.json();
-      if (response.ok) {
-        console.log(updateResult.msg);
-      } else {
-        alert(updateResult.msg);
-      }
-
-      const notificationData = {
-        userId: person.id,
-        eventName: selectedEvent.name,
-        eventDate: selectedEvent.date,
-      };
-
-      const notificationResponse = await fetch('http://127.0.0.1:5000/api/send-assignment-notification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(notificationData),
-      });
-
-      const result = await notificationResponse.json();
-      alert(notificationResponse.ok ? "Volunteer successfully matched and notification sent." : result.msg);
-    } catch (error) {
-      console.error("Failed to send notification:", error);
-      alert("An error occurred while sending the notification.");
+    const result = await response.json();
+    if (response.ok) {
+      alert(result.msg);
+    } else {
+      alert("Error: " + result.msg);
     }
   };
 
   return (
-    <div style={styles.container}>
+    <div>
       <Navbar />
-      
-      <div style={styles.content}>
-        <h2 style={styles.header}>Event Matcher</h2>
+      <h2 style={styles.header}>Event Matcher</h2>
+      <div style={styles.eventList}>
 
-        <div>
-          <h3>Select a User</h3>
-          <select style={styles.dropdown} onChange={(e) => handleUserSelect(e.target.value)}>
-            <option value="">Select User</option>
-            {people.map((user) => (
-              <option key={user.id} value={user.email}>
-                {user.fullname || user.email}
-              </option>
-            ))}
-          </select>
-        </div>
 
-        <div>
-          <h3>Select an Event</h3>
-          <select style={styles.dropdown} onChange={(e) => handleEventSelect(Number(e.target.value))}>
-            <option value="">Select Event</option>
-            {events.map((event) => (
-              <option key={event.id} value={event.id}>
-                {event.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {events.map(event => (
+          <div key={event.id} style={styles.eventBox}>
+            <h3>{event.name}</h3>
+            <p><strong>Date:</strong> {event.date}</p>
+            <p><strong>Location:</strong> {event.location}</p>
+            <p><strong>Description:</strong> {event.description}</p>
+            <p><strong>Required Skills:</strong> {event.requiredSkills.join(", ")}</p>
+            
+            <select
+              style={styles.dropdown}
+              onChange={(e) => setSelectedUsers(prev => ({ ...prev, [event.id]: e.target.value }))}
+            >
+              <option value="">Select User</option>
+              {people.map(person => (
+                <option key={person.id} value={person.email}>
+                  {person.fullname || person.email}
+                </option>
+              ))}
+            </select>
+            <button style={styles.button} onClick={() => handleConfirm(event.id)}>
+              Confirm Match
+            </button>
+          </div>
+        ))}
 
-        <button style={styles.button} onClick={handleConfirm}>Confirm Match</button>
-
-        <div>
-          <h3>Event Details</h3>
-          {selectedEvent && (
-            <div style={styles.eventItem}>
-              <p><strong>Name:</strong> {selectedEvent.name}</p>
-              <p><strong>Date:</strong> {selectedEvent.date}</p>
-              <p><strong>Location:</strong> {selectedEvent.location}</p>
-              <p><strong>Description:</strong> {selectedEvent.description}</p>
-              <p>
-                <strong>Required Skills:</strong>{" "}
-                {selectedEvent.skills && selectedEvent.skills.length > 0
-                  ? selectedEvent.skills.join(", ")
-                  : "No specific skills required"}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h3>User Details</h3>
-          {selectedUserEmail && (
-            <UserInfo user={people.find((u) => u.email === selectedUserEmail) || {}} />
-          )}
-        </div>
+        {alertMessage && <p>{alertMessage}</p>}
       </div>
-
       <Footer />
     </div>
   );
 };
 
-const UserInfo = ({ user }) => {
-  const { fullname, email, admin, address1, city, state, zipcode, skills, availability } = user;
-  return (
-    <div className="user-info" style={styles.eventItem}>
-      <p><strong>Name:</strong> {fullname || "Not provided"}</p>
-      <p><strong>Email:</strong> {email}</p>
-      <p><strong>Admin:</strong> {admin ? "Yes" : "No"}</p>
-      <p><strong>Address:</strong> {address1 || "Not provided"}, {city || "Not provided"}, {state || "Not provided"} {zipcode || ""}</p>
-      <p><strong>Skills:</strong> {skills && skills.length > 0 ? skills.join(", ") : "No skills available"}</p>
-      <p><strong>Availability:</strong> {availability && availability.length > 0 ? availability.join(", ") : "No availability dates"}</p>
-    </div>
-  );
-};
-
 const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-  },
-  content: {
-    flex: 1,
-    padding: '20px',
-  },
   header: {
     backgroundColor: '#28a745',
     color: 'white',
@@ -169,16 +112,13 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
     gap: '20px',
-    padding: '0 20px',
-    listStyle: 'none',
-    margin: 0,
+    padding: '20px',
   },
-  eventItem: {
+  eventBox: {
     backgroundColor: 'white',
     padding: '20px',
     borderRadius: '10px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    transition: 'transform 0.2s',
     textAlign: 'left',
   },
   dropdown: {
@@ -186,6 +126,7 @@ const styles = {
     padding: '10px',
     borderRadius: '5px',
     border: '1px solid #ccc',
+    width: '100%',
   },
   button: {
     marginTop: '10px',
@@ -195,6 +136,7 @@ const styles = {
     color: 'white',
     border: 'none',
     cursor: 'pointer',
+    width: '100%',
   },
 };
 
