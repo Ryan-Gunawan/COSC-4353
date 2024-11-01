@@ -7,6 +7,12 @@ import json
 # and we specify what the attributes are and whether
 # they are required or optional.
 
+# Association table for many-to-many relationship between User and Event
+event_user = db.Table('event_user',
+    db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -64,7 +70,8 @@ class Event(db.Model):
     location = db.Column(db.String(100), nullable=False)
     skills = db.Column(Text, nullable=True)  # Store as a JSON string
     urgency = db.Column(db.String(10), nullable=True)  # e.g., "HIGH", "MEDIUM", "LOW"
-    date = db.Column(db.DateTime, nullable=False)
+    date = db.Column(db.String(20), nullable=False)
+    assigned_users = db.relationship('User', secondary=event_user, backref='events') # Many-to-many relationship with User
 
     def to_json(self):
         return {
@@ -72,10 +79,12 @@ class Event(db.Model):
             "name": self.name,
             "description": self.description,
             "location": self.location,
-            "skills": json.loads(self.skills) if self.skills else [],
+            "skills": self.skills,
             "urgency": self.urgency,
-            "date": self.date.isoformat() if self.date else None  # Format date as string
+            "date": self.date,
+            "assigned_users": [user.id for user in self.assigned_users]
         }
+
 
 class Notification(db.Model):
     __tablename__ = 'notification'
