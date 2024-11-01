@@ -346,14 +346,15 @@ def send_assignment_notification():
 # Once we do database consider tracking whether a reminder has been sent for each user and event
 # To better handle repeat reminders and timings
 def send_reminder_notifications():
-    events = get_events()
-    notifications = load_notifications()
+    from models import Event, User, Notification
 
     now = datetime.now()
     reminder_time = now + timedelta(hours=24)
 
     today = date.today()
     current_date = today.strftime("%m-%d-%y")
+
+    upcoming_events = Event.query.filter(Event.date > now, Event.date <= reminder_time).all()
 
     for event in events:
         try:
