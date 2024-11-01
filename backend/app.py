@@ -34,7 +34,7 @@ migrate = Migrate(app, db) # Set up migration
 
 
 # Import models after db is initialized to avoid circular imports
-from models import User, Event
+from models import User, Event, Notification
 
 # Initialize the session
 Session(app)

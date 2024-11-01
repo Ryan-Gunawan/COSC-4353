@@ -254,17 +254,23 @@ def save_notifications(notifications):
 # Get all user notifications
 @app.route('/api/notifications', methods=['GET'])
 def get_notifications():
-    #print(request.headers) # Log request headers
+    from app import db
+    from models import User, Notification
+
     user_id = session['user_id']
-    print(f"User ID from session: {user_id}")
     if not user_id:
-        return jsonify({'msg': 'User not logged in'}), 401
-    notifications = load_notifications()
-    return jsonify(notifications.get(user_id, []))
+        return jsonify({'msg': 'User not autheniticated'}), 401
+
+    notifications = Notification.query.filter_by(user_id=user_id).all()
+    result = [notification.to_json() for notification in notifications]
+    return jsonify(result), 200
 
 # Delete notifs from json file
 @app.route('/api/notifications', methods=['DELETE'])
 def delete_notification():
+    from app import db
+    from models import Notification
+
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
@@ -275,18 +281,12 @@ def delete_notification():
     if not notification_id:
         return jsonify({'msg': 'Notification ID is required'}), 400
 
-    notifications = load_notifications()
-    user_notifications = notifications.get(user_id, [])
-    # Delete "id" or id, string and int ids. Once we get database we can remove the string check
-    notifications[user_id] = [n for n in user_notifications if str(n['id']) != notification_id]
-    notifications[user_id] = [n for n in user_notifications if n['id'] != notification_id]
+    notification = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
+    if not notification:
+        return jsonify({'msg': 'Notification not found'}), 404
 
-    save_notifications(notifications)
-
-    # check if there are any remaining unread notifs and emit to frontend
-    # has_unread = has_unread_notificiations(user_id)
-    # socketio.emit('unread_notification', {'has_unread': has_unread}, to=str(user_id))
-
+    db.session.delete(notification)
+    db.session.commit()
     return jsonify({'msg': 'Notification deleted successfully'}), 204
 
 # # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
@@ -309,39 +309,35 @@ def delete_notification():
 # Send event assignment notification
 @app.route('/api/send-assignment-notification', methods=['POST'])
 def send_assignment_notification():
+    from models import User, Notification
     data = request.get_json()
     user_id = data.get('userId')
     event_name = data.get('eventName')
     event_date = data.get('eventDate')
 
+    # Ensure required fields are present
     if not user_id or not event_name or not event_date:
         return jsonify({'msg': 'user_id, event_name, and event_date are required fields'}), 400
 
-    notifications = load_notifications()
+    # Get user from database
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'msg': 'User not found'}), 404
 
-    # Check if the user_id exists in the notifications, if not, create an empty list
-    if user_id not in notifications:
-        notifications[user_id] = []
-
+    # Create the new notification
     today = date.today()
     current_date = today.strftime("%Y-%m-%d")
+    new_notification = Notification(
+        user_id = user_id,
+        title = "Assignment",
+        date = current_date,
+        message = "Event assigned: " + event_name + " on " + event_date,
+        notif_type = "assignment"
+    )
 
-    new_notification = {
-        "id": len(notifications[user_id]) + 1,  # Increment notification ID for the user
-        "title": "Assignment",
-        "date": current_date,
-        "message": "Event assigned: " + event_name + " on " + event_date,
-        "type": "assignment",
-        "read": False
-    }
-
-    # Append the new notification to the user's notification list
-    notifications[user_id].append(new_notification)
-
-    # Save the updated notifications
-    save_notifications(notifications)
-
-    # socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
+    # add notification to the database
+    db.session.add(new_notification)
+    db.session.commit()
 
     print(f"Notification sent to user {user_id} for event '{event_name}'.")
     return jsonify({'msg': 'Notification sent successfully'}), 200

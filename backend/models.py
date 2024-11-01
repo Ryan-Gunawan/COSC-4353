@@ -77,3 +77,21 @@ class Event(db.Model):
             "date": self.date.isoformat() if self.date else None  # Format date as string
         }
 
+class Notification(db.Model):
+    __tablename__ = 'notification'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Foreign key matches user to notif
+    title = db.Column(db.String(255), nullable=False)
+    date = db.Column(db.String(10), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    notif_type = db.Column(db.String(10), nullable=False)
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "title": self.title,
+            "date": self.date,
+            "message": self.message,
+            "type": self.notif_type
+        }
