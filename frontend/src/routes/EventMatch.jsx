@@ -4,16 +4,7 @@ import Footer from '../components/Footer/Footer';
 
 const PeopleEventMatcher = () => {
   const [people, setPeople] = useState([]);
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      name: "Community Clean-Up",
-      date: "2024-12-01",
-      location: "City Park",
-      description: "A community event to clean up the local park.",
-      requiredSkills: ["teamwork", "endurance"],
-    }
-  ]);
+  const [events, setEvents] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState({});
   const [alertMessage, setAlertMessage] = useState('');
 
@@ -73,7 +64,7 @@ const PeopleEventMatcher = () => {
             <p><strong>Date:</strong> {event.date}</p>
             <p><strong>Location:</strong> {event.location}</p>
             <p><strong>Description:</strong> {event.description}</p>
-            <p><strong>Required Skills:</strong> {event.requiredSkills.join(", ")}</p>
+            <p><strong>Required Skills:</strong> {event.requiredSkills}</p>
             
             <select
               style={styles.dropdown}
