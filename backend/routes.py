@@ -459,16 +459,23 @@ def update_userinfo(user_id):
     return jsonify({"msg": "User info updated successfully"}), 200
 
 
-@app.route("/api/usersList", methods=["GET"])
-def get_userList():
-    users = read_users_from_file()
-    return jsonify(users), 200
+##@app.route("/api/usersList", methods=["GET"])
+#def get_userList():
+#    from app import db
+#    from models import User
+    
+#    users = User.query.all()
+#    lists = [users.to_json() for users in users]
 
-def read_users_from_file():
-    if os.path.exists('dummy/users.json'):
-        with open('dummy/users.json', 'r') as f:
-            return json.load(f)
-    return []
+#    return jsonify(lists), 200
+#    users = read_users_from_file()
+    ##return jsonify(users), 200
+
+##def read_users_from_file():
+#   if os.path.exists('dummy/users.json'):
+#       with open('dummy/users.json', 'r') as f:
+#           return json.load(f)
+##    return []
 
 
 @app.route('/api/match_user', methods=['POST'])

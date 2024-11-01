@@ -3,116 +3,53 @@ import Navbar from "../components/Navbar/Navbar";
 import Footer from '../components/Footer/Footer';
 
 const PeopleEventMatcher = () => {
-  // State to store users, events, selected events, and alert message
   const [people, setPeople] = useState([]);
   const [events, setEvents] = useState([]);
-  const [selectedEvents, setSelectedEvents] = useState({});
-  const [alertMessage, setAlertMessage] = useState('');
+  const [selectedUserEmail, setSelectedUserEmail] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Fetch the user list from userinfo.json
   useEffect(() => {
-    const fetchUsers = async () => {
-      const response = await fetch('http://127.0.0.1:5000/api/usersList');
-      const usersData = await response.json();
-      // Assuming usersData is structured as { users: [...] }
-      setPeople(usersData.users);
-    };
+    fetch("http://127.0.0.1:5000/api/eventlist")
+      .then((response) => response.json())
+      .then((data) => setEvents(data))
+      .catch((error) => console.error("Error fetching events:", error));
 
-    fetchUsers();
+    fetch("http://127.0.0.1:5000/api/users")
+      .then((response) => response.json())
+      .then((data) => setPeople(data))
+      .catch((error) => console.error("Error fetching users:", error));
   }, []);
 
-  // Fetch the event list
-  useEffect(() => {
-    const fetchEvents = async () => {
-      const eventsResponse = await fetch('http://127.0.0.1:5000/api/eventlist');
-      const eventsData = await eventsResponse.json();
-      setEvents(eventsData);
-    };
+  const handleUserSelect = (email) => setSelectedUserEmail(email);
+  const handleEventSelect = (eventId) => setSelectedEvent(events.find(event => event.id === eventId));
 
-    fetchEvents();
-  }, []);
+  const handleConfirm = async () => {
+    if (!selectedEvent) return alert("Please select an event");
+    const person = people.find(p => p.email === selectedUserEmail);
+    if (!person) return alert("No user selected for event");
 
-  const hasRequiredSkills = (personSkills, requiredSkills) => {
-
-    personSkills = Array.isArray(personSkills) ? personSkills : [];
-    requiredSkills = Array.isArray(requiredSkills) ? requiredSkills : [];
-
-    if (requiredSkills.length === 0) {
-      return true;
-    }
-
-    // Normalize skills to lower case and trim whitespace
-    const normalizedPersonSkills = personSkills.map(skill => skill.toLowerCase().trim());
-    const normalizedRequiredSkills = requiredSkills.map(skill => skill.toLowerCase().trim());
-
-    // Check if at least one required skill is in person's skills
-    return normalizedRequiredSkills.some(skill => normalizedPersonSkills.includes(skill));
-  };
-
-  // Function to check if the person is available for the event
-  const isAvailable = (personAvailability, eventDate) => {
-    personAvailability = Array.isArray(personAvailability) ? personAvailability : [];
-    eventDate = Array.isArray(eventDate) ? eventDate : [];
-
-    return true;
-  };
-
-
-  // Handles confirm button press
-  const handleConfirm = async (eventName) => {
-
-    const selectedEvent = events.find(event => event.name === eventName);
-    const selectedUser = selectedEvents[eventName];
-    // Ensure that a user is selected
-    if (!selectedUser) {
-      alert("No user selected for event");
-      return;
-    }
-    // Find the selected user based on their email
-    const person = people.find(p => p.email === selectedUser);
-    if (!person) {
-      alert("No user selected for event");
-      return;
-    }
     const userId = person.id;
     const eventId = selectedEvent.id;
 
-    // Check if user has required skills
-    if (!hasRequiredSkills(person.skills, selectedEvent.requiredSkills)) {
-      alert("User does not have the required skills for this event.");
-      return;
-    }
-    // Check if user has avaliability
-    if (!isAvailable(person.availability, selectedEvent.date)) {
-      alert("User is not avaliable for this event.");
-      return;
-    }
-
-    // Send POST request to match user to event
-    const response = await fetch('http://127.0.0.1:5000/api/match_user', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: userId, event_id: eventId }),
-    });
-
-    const responseData = await response.json();
-
-    if (response.ok) {
-      alert(responseData.message);
-    } else {
-      alert(responseData.message);
-    }
-
     try {
+      const response = await fetch('http://127.0.0.1:5000/api/match_user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId, event_id: eventId }),
+      });
+
+      const responseData = await response.json();
+      alert(responseData.message);
+
       const notificationData = {
-        userId: person.id, // Assuming the user's ID is available
+        userId: person.id,
         eventName: selectedEvent.name,
         eventDate: selectedEvent.date,
       };
 
-      const response = await fetch('http://127.0.0.1:5000/api/send-assignment-notification', {
+      const notificationResponse = await fetch('http://127.0.0.1:5000/api/send-assignment-notification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,85 +57,109 @@ const PeopleEventMatcher = () => {
         body: JSON.stringify(notificationData),
       });
 
-      const result = await response.json();
-      if (response.ok) {
-        console.log(result.msg);
-        alert("Volunteer successfully matched and notification sent.");
-      } else {
-        alert(result.msg);
-      }
+      const result = await notificationResponse.json();
+      alert(notificationResponse.ok ? "Volunteer successfully matched and notification sent." : result.msg);
     } catch (error) {
       console.error("Failed to send notification:", error);
       alert("An error occurred while sending the notification.");
     }
   };
 
-
   return (
-    <div className="page-container">
-      {/* Header banner */}
+    <div style={styles.container}>
       <Navbar />
-      <header style={styles.header}>People & Event Matcher</header>
+      
+      <div style={styles.content}>
+        <h2 style={styles.header}>Event Matcher</h2>
 
-      <main className="main-content">
-        {/* Alert message display */}
-        {alertMessage && <div style={styles.alert}>{alertMessage}</div>}
+        <div>
+          <h3>Select a User</h3>
+          <select style={styles.dropdown} onChange={(e) => handleUserSelect(e.target.value)}>
+            <option value="">Select User</option>
+            {people.map((user) => (
+              <option key={user.id} value={user.email}>
+                {user.fullname || user.email}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* Events list container */}
-        <ul style={styles.eventList}>
-          {events.map((event, index) => (
-            <li key={index} style={styles.eventItem}>
-              <h2>{event.name}</h2>
-              <p><strong>Date:</strong> {event.date}</p>
-              <p><strong>Location:</strong> {event.location}</p>
-              <p><strong>Description:</strong> {event.description}</p>
-              <p><strong>Skills:</strong> {event.skills || "No Required Skills"}</p>
+        <div>
+          <h3>Select an Event</h3>
+          <select style={styles.dropdown} onChange={(e) => handleEventSelect(Number(e.target.value))}>
+            <option value="">Select Event</option>
+            {events.map((event) => (
+              <option key={event.id} value={event.id}>
+                {event.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-              {/* Dropdown for user selection */}
-              <select
-                onChange={(e) => {
-                  const selectedUserEmail = e.target.value;
-                  setSelectedEvents(prev => ({ ...prev, [event.name]: selectedUserEmail }));
-                }}
-                style={styles.dropdown}
-              >
-                <option value="">Select a user</option>
-                {people.map((user) => (
-                  <option
-                    key={user.id}
-                    value={user.email} // Display the user's name in the dropdown
-                    title={`Availability: ${user.availability || "Not Avaliable"}, Skills: ${user.skills || ""}`} // Tooltip with user's availability
-                  >
-                    {user.fullname} ({user.email}) {/* Optionally show email */}
-                  </option>
-                ))}
-              </select>
+        <button style={styles.button} onClick={handleConfirm}>Confirm Match</button>
 
-              {/* Confirm button */}
-              <button
-                onClick={() => handleConfirm(event.name)}
-                style={styles.button}
-              >
-                Confirm Match
-              </button>
-            </li>
-          ))}
-        </ul>
-      </main>
+        <div>
+          <h3>Event Details</h3>
+          {selectedEvent && (
+            <div style={styles.eventItem}>
+              <p><strong>Name:</strong> {selectedEvent.name}</p>
+              <p><strong>Date:</strong> {selectedEvent.date}</p>
+              <p><strong>Location:</strong> {selectedEvent.location}</p>
+              <p><strong>Description:</strong> {selectedEvent.description}</p>
+              <p>
+                <strong>Required Skills:</strong>{" "}
+                {selectedEvent.skills && selectedEvent.skills.length > 0
+                  ? selectedEvent.skills.join(", ")
+                  : "No specific skills required"}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h3>User Details</h3>
+          {selectedUserEmail && (
+            <UserInfo user={people.find((u) => u.email === selectedUserEmail) || {}} />
+          )}
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
 };
 
-// Basic inline styles for the component
+const UserInfo = ({ user }) => {
+  const { fullname, email, admin, address1, city, state, zipcode, skills, availability } = user;
+  return (
+    <div className="user-info" style={styles.eventItem}>
+      <p><strong>Name:</strong> {fullname || "Not provided"}</p>
+      <p><strong>Email:</strong> {email}</p>
+      <p><strong>Admin:</strong> {admin ? "Yes" : "No"}</p>
+      <p><strong>Address:</strong> {address1 || "Not provided"}, {city || "Not provided"}, {state || "Not provided"} {zipcode || ""}</p>
+      <p><strong>Skills:</strong> {skills && skills.length > 0 ? skills.join(", ") : "No skills available"}</p>
+      <p><strong>Availability:</strong> {availability && availability.length > 0 ? availability.join(", ") : "No availability dates"}</p>
+    </div>
+  );
+};
+
 const styles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: '100vh',
+  },
+  content: {
+    flex: 1,
+    padding: '20px',
+  },
   header: {
     backgroundColor: '#28a745',
     color: 'white',
     textAlign: 'center',
     padding: '20px 0',
     marginBottom: '20px',
-    fontSize: '2em'
+    fontSize: '2em',
   },
   eventList: {
     display: 'grid',
@@ -206,7 +167,7 @@ const styles = {
     gap: '20px',
     padding: '0 20px',
     listStyle: 'none',
-    margin: 0
+    margin: 0,
   },
   eventItem: {
     backgroundColor: 'white',
@@ -214,13 +175,13 @@ const styles = {
     borderRadius: '10px',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.2s',
-    textAlign: 'left'
+    textAlign: 'left',
   },
   dropdown: {
     marginTop: '10px',
     padding: '10px',
     borderRadius: '5px',
-    border: '1px solid #ccc'
+    border: '1px solid #ccc',
   },
   button: {
     marginTop: '10px',
@@ -229,8 +190,8 @@ const styles = {
     backgroundColor: '#007bff',
     color: 'white',
     border: 'none',
-    cursor: 'pointer'
-  }
+    cursor: 'pointer',
+  },
 };
 
 export default PeopleEventMatcher;
