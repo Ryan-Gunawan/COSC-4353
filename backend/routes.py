@@ -408,16 +408,12 @@ def send_event_update_notifications(event_id):
 def get_history():
     from app import db
     from models import User, Event
-    # session['user_id'] = "1" #manually
     user_id = session['user_id']
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401
-    # Get volunteer list from user
-    user_info = User.query.get(user_id)
-    volunteer_info = json.loads(user_info.volunteer)
-    # Get event info
-    retrieve_event = Event.query.filter(Event.id.in_(volunteer_info)).all()
-    event_info = [event.to_json() for event in retrieve_event]
+    user = User.query.get(user_id)
+    volunteer_history = user.events
+    event_info = [event.to_json() for event in volunteer_history]
 
     return jsonify(event_info), 200
 
