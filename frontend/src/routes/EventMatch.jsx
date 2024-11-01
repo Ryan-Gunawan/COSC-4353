@@ -11,9 +11,15 @@ const PeopleEventMatcher = () => {
   useEffect(() => {
     // Fetch additional events from the database
     fetch("http://127.0.0.1:5000/api/eventlist")
-      .then((response) => response.json())
-      .then((data) => setEvents((prevEvents) => [...prevEvents, ...data]))
-      .catch((error) => console.error("Error fetching events:", error));
+    .then((response) => response.json())
+    .then((data) => {
+      const uniqueEvents = data.filter(
+        (event, index, self) =>
+          index === self.findIndex((e) => e.id === event.id)
+      );
+      setEvents(uniqueEvents);
+    })
+    .catch((error) => console.error('Error fetching events:', error));
 
     // Fetch users from the /api/userslist endpoint
     fetch("http://127.0.0.1:5000/api/users")
