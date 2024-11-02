@@ -67,10 +67,25 @@ const PeopleEventMatcher = () => {
         {events.map(event => (
           <div key={event.id} style={styles.eventBox}>
             <h3>{event.name}</h3>
-            <p><strong>Date:</strong> {event.date}</p>
+            <p><strong>Date:</strong> {
+                event.date ? 
+                new Date(event.date).toLocaleString('en-CA', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false,
+                }).replace(',', '') : 'TBA'
+            }</p>
             <p><strong>Location:</strong> {event.location}</p>
             <p><strong>Description:</strong> {event.description}</p>
-            <p><strong>Required Skills:</strong> {event.requiredSkills}</p>
+            <p><strong>Skills Preferred:</strong> {
+                      event.skills ? 
+                      JSON.parse(event.skills).join(', ') : 
+                      'No specific skills required'
+                  }</p>
             
             <select
               style={styles.dropdown}

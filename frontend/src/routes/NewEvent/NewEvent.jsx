@@ -9,7 +9,7 @@ function NewEvent() {
     name: '',
     description: '',
     location: '',
-    skills: [],
+    skills: '',
     urgency: '1', // default urgency value
     date: ''
   });
@@ -29,20 +29,26 @@ function NewEvent() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();  // Prevent default form submission
-
+  
     try {
+      // Convert skills to JSON string for submission without modifying the original formData
+      const formDataToSubmit = {
+        ...formData,
+        skills: JSON.stringify(formData.skills),
+      };
+  
       const response = await fetch('http://127.0.0.1:5000/api/newevent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formDataToSubmit),
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
       console.log(data.message);  // Show success message
       navigate('/success');
@@ -50,6 +56,7 @@ function NewEvent() {
       console.error('Error submitting form:', error);
     }
   };
+  
 
   return (
     <>

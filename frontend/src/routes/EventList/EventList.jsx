@@ -82,7 +82,7 @@ const EventList = () => {
       location: event.location,
       description: event.description,
       urgency: event.urgency || '',
-      skills: event.skills || [],
+      skills: event.skills || '',
     });
   };
 
@@ -180,10 +180,25 @@ const EventList = () => {
               ) : (
                 <div>
                   <h2>{event.name}</h2>
-                  <p><strong>Date:</strong> {event.date}</p>
+                  <p><strong>Date:</strong> {
+                      event.date ? 
+                      new Date(event.date).toLocaleString('en-CA', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                      }).replace(',', '') : 'TBA'
+                  }</p>
                   <p><strong>Location:</strong> {event.location}</p>
                   <p><strong>Urgency:</strong> {event.urgency ? event.urgency : 'N/A'}</p>
-                  <p><strong>Skills preferred:</strong> {Array.isArray(event.skills) ? event.skills.join(', ') : 'N/A'}</p>
+                  <p><strong>Skills Preferred:</strong> {
+                      event.skills ? 
+                      JSON.parse(event.skills).join(', ') : 
+                      'No specific skills required'
+                  }</p>
                   <p>{event.description}</p>
 
                   {/* Only show edit and delete buttons for admins */}
