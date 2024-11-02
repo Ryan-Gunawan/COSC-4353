@@ -345,64 +345,72 @@ def send_assignment_notification():
 # To better handle repeat reminders and timings
 def send_reminder_notifications():
     from models import Event, User, Notification
+    from app import app
 
-    now = datetime.now()
-    reminder_time = now + timedelta(hours=24)
+    with app.app_context():
+        now = datetime.now()
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        current_date = today.strftime("%m-%d-%Y")
 
-    today = date.today()
-    current_date = today.strftime("%m-%d-%y")
+        # Query events happening tomorrow
+        upcoming_events = Event.query.filter(
+            Event.date >= tomorrow,
+            Event.date < tomorrow + timedelta(days=1)
+        ).all()
 
-    upcoming_events = Event.query.filter(Event.date > now, Event.date <= reminder_time).all()
+        # Print the current time and upcoming events for debugging
+        # print(f"Current time: {today}, Tomorrow: {tomorrow}")
+        # print(f"Found upcoming events: {[event.name for event in upcoming_events]}")  # Print event names
 
-    for event in events:
-        try:
-            event_date = datetime.strptime(event['date'], '%Y-%m-%dT%H:%M:%S')
-        except ValueError:
-            event_date = datetime.strptime(event['date'], '%Y-%m-%d')
+        for event in upcoming_events:
+            event_date = datetime.strptime(event.date, '%Y-%m-%dT%H:%M:%S') if 'T' in event.date else datetime.strptime(event.date, '%Y-%m-%d')
+            # print(f"Today: {today}, Event date: {event_date.date()}, Tomorrow: {tomorrow}")
 
-        if now < event_date <= reminder_time:
-            for user_id in event['assignedUsers']:
-                new_notification = {
-                    "id": len(notifications.get(user_id, [])) + 1,
-                    "title": "Reminder",
-                    "date": current_date,
-                    "message": f"Event Reminder: '{event['name']}' is coming up in 24 hours!",
-                    "type": "reminder",
-                    "read": False
-                }
-                notifications[user_id].append(new_notification)
-                # socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
-                print("Appended notification successfully")
-    save_notifications(notifications)
-    print("Sent reminders for upcoming events")
+            if today < event_date.date() <= tomorrow:
+                if event.assigned_users:
+                    for user in event.assigned_users:
+                        new_notification = Notification(
+                            user_id = user.id,
+                            title = "Reminder",
+                            date = current_date,
+                            message = f"Event reminder: {event.name} is coming up in 24 hours!",
+                            notif_type = "reminder"
+                        )
+                        db.session.add(new_notification)
+                        print(f"Appended notification successfully to user: {user.id}")
+                    db.session.commit()
+                else:
+                    print(f"No assigned users for event '{event.name}'")
 
 # Set up scheduler to periodically check to send reminder notifications
 # To test make sure event is set to next day not same day
 if not scheduler.get_job('reminder_notifications'):
-    scheduler.add_job(send_reminder_notifications, 'interval', hours=24, id='reminder_notifications')
+    scheduler.add_job(send_reminder_notifications, 'interval', hours=10, id='reminder_notifications')
 scheduler.start()
 
 # When admin updates an event all the assigned users are sent an update notification
 # may need to change to use a route: get request data with event_id
 def send_event_update_notifications(event_id):
-    events = get_events()
-    notifications = load_notifications()
+    from modles import Event, User, Notification
     today = date.today()
     current_date = today.strftime("%m-%d-%y")
-    event = events[event_id]
-    for user_id in event['assignedUsers']:
-        new_notification = {
-            "id": len(notifications.get(user_id, [])) + 1,
-            "title": "Update",
-            "date": current_date,
-            "message": f"Event Update: '{event['name']}' has been updated, please check the event listing to view any changes.",
-            "type": "update",
-            "read": False
-        }
-        notifications[user_id].append(new_notification)
-        # socketio.emit('unread_notification', {'has_unread': True}, to=str(user_id))
-    save_notifications(notifications)
-    print("Sent update")
+    event = Event.query.get(event_id)
+    if not event.assigned_users:
+        print("No users assigned to this event.")
+        return
+    for user in event.assigned_users:
+        new_notification = Notification(
+            user_id = user.id,
+            title = "Update",
+            date = current_date,
+            message = f"Event reminder: '{event.name}' has been updated, please check the event listing to view any changes.",
+            notif_type = "update"
+        )
+        db.session.add(new_notification)
+        print(f"Appended notification successfully to user: {user.id}")
+    db.session.commit()
+    print(f"Sent update notifications for event: {event.name}")
 
 @app.route("/api/volunteerhistory", methods = ["GET"])
 def get_history():
