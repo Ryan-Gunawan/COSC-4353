@@ -416,6 +416,8 @@ def send_event_update_notifications(event_id):
 def get_history():
     from app import db
     from models import User, Event
+
+    # session['user_id'] = "1" #manually
     user_id = session['user_id']
     if not user_id:
         return jsonify({'msg': 'User not logged in'}), 401

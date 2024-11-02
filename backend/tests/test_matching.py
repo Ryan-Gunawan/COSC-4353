@@ -1,86 +1,111 @@
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, MagicMock
+import json
 import sys
 sys.path.append('../')
-from app import app
-from routes import app, read_users_from_file, match_user  # Importing functions from your routes module
-import json
-from flask import Flask, session
+from app import app, db  # Import the Flask app and database
 
-
-class UserAPITestCase(unittest.TestCase):
+class EventMatcherAPITestCase(unittest.TestCase):
     
     def setUp(self):
+        # Create a test client for the Flask app
         self.app = app.test_client()
         self.app.testing = True
 
-    # Test for GET /api/usersList
-    @patch('routes.read_users_from_file', return_value={"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword"}]})
-    def test_get_users_list(self, mock_read_users_from_file):
-        """Test fetching the user list from the /api/usersList route."""
-        response = self.app.get('/api/usersList')
-        self.assertEqual(response.status_code, 200)
+    # Test for GET /api/users
+    @patch('app.db.session.query')
+    def test_get_users_list(self, mock_query):
+        """Test fetching the user list from the /api/users route."""
+        # Mocked user data returned from database query
+        mock_users = [
+            MagicMock(id=1, email="user1@example.com", fullname="User One", volunteer=[]),
+            MagicMock(id=2, email="user2@example.com", fullname="User Two", volunteer=[])
+        ]
+        # Configure query to return mock users
+        mock_query.return_value.all.return_value = mock_users
 
-        # Check if the response is JSON
+        # Send GET request
+        response = self.app.get('/api/users')
+        
+        # Check response status and content type
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content_type, 'application/json')
 
-        # Verify the mocked function is called
-        mock_read_users_from_file.assert_called_once()
-
-        # Parse the response data and assert the structure
+        # Parse the JSON response and verify the data structure
         data = json.loads(response.data)
-        self.assertIn('users', data)
-        self.assertEqual(data['users'][0]['id'], "1")
-        self.assertEqual(data['users'][0]['email'], "testuser@example.com")
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]["email"], "user1@example.com")
 
-    # Test for POST /api/match_user
-    @patch('routes.open', new_callable=mock_open, read_data='{"users": [{"id": "1", "email": "testuser@example.com", "volunteer": [2]}]}')
-    def test_match_user(self, mock_file):
-        """Test matching a user to an event from the /api/match_user route."""
-        response = self.app.post('/api/match_user', json={
-            "user_id": "1",
-            "event_id": 3
-        })
-
-        # Check the status code of the response
+    # Test for PUT /api/match_user for successful matching
+    @patch('app.db.session.commit')
+    @patch('app.db.session.query')
+    def test_match_user_success(self, mock_query, mock_commit):
+        """Test matching a user to an event with /api/match_user route."""
+        # Mock user with an empty volunteer list
+        mock_user = MagicMock(id=1, volunteer=[])
+        
+        # Configure the query mock to return the mock user and a valid event
+        mock_query.side_effect = lambda model: [mock_user] if model.__name__ == 'User' else [MagicMock(id=3)]
+        
+        # Send PUT request
+        response = self.app.put('/api/match_user', json={"user_id": 1, "event_id": 3})
+        
+        # Verify successful match response
         self.assertEqual(response.status_code, 200)
-
-        # Verify that the data was written to the file
-        mock_file().write.assert_called()
-
-        # Check the response message
         data = json.loads(response.data)
-        self.assertEqual(data['message'], 'User matched successfully!')
+        self.assertEqual(data['msg'], 'Event added to volunteer list')
+        self.assertIn(3, mock_user.volunteer)
 
-    @patch('routes.open', new_callable=mock_open, read_data='{"users": [{"id": "1", "email": "testuser@example.com", "volunteer": [1, 2, 3]}]}')
-    def test_user_already_matched(self, mock_file):
-        """Test trying to match a user who is already matched to an event."""
-        response = self.app.post('/api/match_user', json={
-            "user_id": "1",
-            "event_id": 3
-        })
-
-        # Check if the response status is 400 (Bad Request)
-        self.assertEqual(response.status_code, 400)
-
-        # Check if the correct message is returned
+    # Test for PUT /api/match_user when user is already matched to the event
+    @patch('app.db.session.commit')
+    @patch('app.db.session.query')
+    def test_user_already_matched(self, mock_query, mock_commit):
+        """Test matching a user who is already matched to an event."""
+        # Mock user with an existing event in the volunteer list
+        mock_user = MagicMock(id=1, volunteer=[3])
+        
+        # Configure query mock to return the mock user
+        mock_query.return_value.filter_by.return_value.first.return_value = mock_user
+        
+        # Send PUT request
+        response = self.app.put('/api/match_user', json={"user_id": 1, "event_id": 3})
+        
+        # Verify already matched response
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        self.assertEqual(data['message'], 'Volunteer has already been matched to this event.')
+        self.assertEqual(data['msg'], 'Event already in volunteer list')
 
-    @patch('routes.open', new_callable=mock_open, read_data='{"users": [{"id": "1", "email": "testuser@example.com", "volunteer": []}]}')
-    def test_user_not_found(self, mock_file):
+    # Test for PUT /api/match_user when user is not found
+    @patch('app.db.session.query')
+    def test_user_not_found(self, mock_query):
         """Test trying to match a user who doesn't exist."""
-        response = self.app.post('/api/match_user', json={
-            "user_id": "99",
-            "event_id": 3
-        })
-
-        # Check if the response status is 404 (Not Found)
+        # Configure query to return None for a non-existent user
+        mock_query.return_value.filter_by.return_value.first.return_value = None
+        
+        # Send PUT request
+        response = self.app.put('/api/match_user', json={"user_id": 99, "event_id": 3})
+        
+        # Verify user not found response
         self.assertEqual(response.status_code, 404)
-
-        # Check if the correct message is returned
         data = json.loads(response.data)
-        self.assertEqual(data['message'], 'User not found.')
+        self.assertEqual(data['msg'], 'User not found')
+
+    # Test for PUT /api/match_user when event is not found
+    @patch('app.db.session.query')
+    def test_event_not_found(self, mock_query):
+        """Test trying to match a user to a non-existent event."""
+        # Mock a valid user but configure event query to return None
+        mock_user = MagicMock(id=1, volunteer=[])
+        mock_query.side_effect = lambda model: [mock_user] if model.__name__ == 'User' else None
+        
+        # Send PUT request
+        response = self.app.put('/api/match_user', json={"user_id": 1, "event_id": 99})
+        
+        # Verify event not found response
+        self.assertEqual(response.status_code, 404)
+        data = json.loads(response.data)
+        self.assertEqual(data['msg'], 'Event not found')
 
 if __name__ == '__main__':
     unittest.main()
