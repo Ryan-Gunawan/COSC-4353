@@ -2,147 +2,194 @@ import unittest
 from unittest.mock import patch, mock_open
 import sys
 sys.path.append('../')
-from app import app
+from app import app, db
 import json
 from flask import Flask, session
-from routes import load_notifications, save_notifications, get_notifications, delete_notification, send_reminder_notifications, send_event_update_notifications
+from routes import get_notifications, delete_notification, send_reminder_notifications, send_event_update_notifications
+from routes import scheduler
+from models import User, Event, Notification
 from datetime import datetime, timedelta, date
 
 class TestNotifications(unittest.TestCase):
     def setUp(self):
         app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         app.config['SECRET_KEY'] = 'testkey' # for session testing
         self.client = app.test_client() # create a test client
         self.client.testing = True
+        self.app_context = app.app_context()
+        self.app_context.push()
 
-    @patch('routes.load_notifications')
-    def test_get_notifications(self, mock_load_notifications):
-        mock_load_notifications.return_value = {
-            "1": [
-                {
-                    "id": "1",
-                    "title": "Assignment",
-                    "date": "11-22-63",
-                    "message": "Event assigned: Beach Cleanup",
-                    "type": "assignment",
-                    "read": True
-                }]}
+        db.create_all()
 
-        with self.client.session_transaction() as session:
-            session['user_id'] = "1"
+        # Create test user
+        self.test_user = User(
+            email='test@example.com',
+            password='TestPass123!',
+            admin=False
+        )
+        self.test_user.set_password('TestPass123!')
+        db.session.add(self.test_user)
 
+        # Create test notification
+        self.test_notification = Notification(
+            user_id=1,
+            title="Test Notification",
+            date=date.today().strftime("%Y-%m-%d"),
+            message="Test message",
+            notif_type="test"
+        )
+        db.session.add(self.test_notification)
+        db.session.commit()
+
+    def tearDown(self):
+        scheduler.remove_all_jobs()
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+
+
+    def login_test_user(self):
+        """Helper method to login test user"""
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = self.test_user.id
+
+    def test_get_notifications(self):
+        """Test getting user notifications"""
+        self.login_test_user()
+        
         response = self.client.get('/api/notifications')
-
-        # Assert: Check response and data
         self.assertEqual(response.status_code, 200)
-        json_data = response.get_json()
-        self.assertEqual(len(json_data), 1)
-        self.assertEqual(json_data[0]['message'], "Event assigned: Beach Cleanup")
+        
+        data = json.loads(response.data)
+        self.assertTrue(isinstance(data, list))
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['title'], 'Test Notification')
 
+    # def test_get_notifications_unauthorized(self):
+    #     """Test getting notifications without login"""
+    #     response = self.client.get('/api/notifications')
+    #     self.assertEqual(response.status_code, 401)
 
-    @patch('routes.load_notifications')
-    @patch('routes.save_notifications')
-    def test_delete_notification(self, mock_save_notifications, mock_load_notifications):
-        mock_load_notifications.return_value = {
-            "1": [
-                {
-                    "id": "1",
-                    "title": "Assignment",
-                    "date": "11-22-63",
-                    "message": "Event assigned: Beach Cleanup",
-                    "type": "assignment",
-                    "read": True
-                }]}
-
-        with self.client.session_transaction() as session:
-            session['user_id'] = "1"
-
-        response = self.client.delete('/api/notifications', json={'notification_id': "1"})
+    def test_delete_notification(self):
+        """Test deleting a notification"""
+        self.login_test_user()
+        
+        response = self.client.delete('/api/notifications',
+            json={'notification_id': self.test_notification.id}
+        )
         self.assertEqual(response.status_code, 204)
-        mock_save_notifications.assert_called_once()
-        saved_data = mock_save_notifications.call_args[0][0]
-        self.assertEqual(saved_data['1'], [])  # Check that notification was deleted
+        
+        # Verify notification was deleted
+        notification = Notification.query.get(self.test_notification.id)
+        self.assertIsNone(notification)
 
-    @patch('routes.load_notifications')
-    @patch('routes.save_notifications')
-    def test_delete_notification_user_not_logged_in(self,  mock_save_notifications, mock_load_notifications):
-        # No session user_id, make DELETE request
-        response = self.client.delete('/api/notifications', json={'notification_id': '101'})
-
+    def test_delete_notification_unauthorized(self):
+        """Test deleting notification without login"""
+        response = self.client.delete('/api/notifications',
+            json={'notification_id': self.test_notification.id}
+        )
         self.assertEqual(response.status_code, 401)
-        self.assertIn('User not logged in', response.get_json()['msg'])
 
-    @patch('routes.load_notifications')
-    @patch('routes.save_notifications')
-    def test_send_assignment_notification_success(self, mock_save_notifications, mock_load_notifications):
-        mock_load_notifications.return_value = {}  # No current notifications
-        user_id = '1'
-        event_name = 'Test Event'
-        event_date = '2024-12-25'
-        current_date = date.today().strftime("%Y-%m-%d")
+    def test_delete_notification_missing_id(self):
+        """Test deleting notification without providing ID"""
+        self.login_test_user()
+        response = self.client.delete('/api/notifications',
+            json={}
+        )
+        self.assertEqual(response.status_code, 400)
 
-        response = self.client.post('/api/send-assignment-notification', json={
-            'userId': user_id,
-            'eventName': event_name,
-            'eventDate': event_date
-        })
+    def test_delete_nonexistent_notification(self):
+        """Test deleting a notification that doesn't exist"""
+        self.login_test_user()
+        response = self.client.delete('/api/notifications',
+            json={'notification_id': 9999}
+        )
+        self.assertEqual(response.status_code, 404)
 
-        # Asserts
+    def test_send_assignment_notification(self):
+        """Test sending assignment notification"""
+        test_data = {
+            'userId': self.test_user.id,
+            'eventName': 'Test Event',
+            'eventDate': '2024-12-25'
+        }
+        
+        response = self.client.post('/api/send-assignment-notification',
+            json=test_data
+        )
         self.assertEqual(response.status_code, 200)
-        mock_save_notifications.assert_called_once()
-        saved_notifications = mock_save_notifications.call_args[0][0]
-        self.assertIn(user_id, saved_notifications)
-        self.assertEqual(saved_notifications[user_id][0]['message'], f"Event assigned: {event_name} on {event_date}")
-        self.assertEqual(saved_notifications[user_id][0]['date'], current_date)
+        
+        # Verify notification was created
+        notification = Notification.query.filter_by(
+            user_id=self.test_user.id,
+            notif_type='assignment'
+        ).first()
+        self.assertIsNotNone(notification)
+        self.assertIn('Test Event', notification.message)
 
+    def test_send_assignment_notification_missing_fields(self):
+        """Test sending assignment notification with missing fields"""
+        test_data = {
+            'userId': self.test_user.id,
+            'eventName': 'Test Event'
+            # Missing eventDate
+        }
+        
+        response = self.client.post('/api/send-assignment-notification',
+            json=test_data
+        )
+        self.assertEqual(response.status_code, 400)
 
-    @patch('routes.load_notifications')
-    @patch('routes.save_notifications')
-    @patch('routes.read_events_from_file')
-    def test_send_reminder_notifications_success(self, mock_read_events, mock_save_notifications, mock_load_notifications):
-        now = datetime.now()
-        event_date = now + timedelta(hours=23)  # Event happening within 24 hours
-        event_data = [{
-            'name': 'Reminder Event',
-            'date': event_date.strftime('%Y-%m-%dT%H:%M:%S'),
-            'assignedUsers': ['1']
-        }]
-        mock_read_events.return_value = event_data
-        mock_load_notifications.return_value = {'1': []}
+    def test_send_reminder_notifications(self):
+        """Test sending reminder notifications for upcoming events"""
+        # Create test event for tomorrow
+        tomorrow = date.today() + timedelta(days=1)
+        test_event = Event(
+            name='Test Event',
+            description='Test description',
+            date=tomorrow.strftime('%Y-%m-%d'),
+            location='Somewhere'
+        )
 
-        # Call the function to send reminders
+        test_event.assigned_users.append(self.test_user)
+        db.session.add(test_event)
+        db.session.commit()
+
+        # Run the reminder notification function
         send_reminder_notifications()
 
-        # Asserts to ensure notifications are saved and the correct reminder message is sent
-        mock_save_notifications.assert_called_once()
-        saved_notifications = mock_save_notifications.call_args[0][0]
-        self.assertIn('1', saved_notifications)
-        self.assertEqual(saved_notifications['1'][0]['message'], f"Event Reminder: 'Reminder Event' is coming up in 24 hours!")
+        # Verify reminder notification was created
+        notification = Notification.query.filter_by(
+            user_id=self.test_user.id,
+            notif_type='reminder'
+        ).first()
+        self.assertIsNotNone(notification)
+        self.assertIn('Test Event', notification.message)
 
-    @patch('routes.load_notifications')
-    @patch('routes.save_notifications')
-    @patch('routes.read_events_from_file')
-    def test_send_event_update_notifications_success(self, mock_read_events, mock_save_notifications, mock_load_notifications):
-        event_id = '1'
-        event_data = {
-            event_id: {
-                'name': 'Updated Event',
-                'assignedUsers': ['1']
-            }
-        }
-        mock_read_events.return_value = event_data
-        mock_load_notifications.return_value = {'1': []}
-        current_date = date.today().strftime("%m-%d-%y")
+    def test_send_event_update_notifications(self):
+        """Test sending update notifications when event is modified"""
+        # Create test event
+        test_event = Event(
+            name='Test Event',
+            date=date.today().strftime('%Y-%m-%d'),
+            description='Test description',
+            location='Somewhere'
+        )
+        test_event.assigned_users.append(self.test_user)
+        db.session.add(test_event)
+        db.session.commit()
 
-        # Call the function to send update notifications
-        send_event_update_notifications(event_id)
+        # Send update notifications
+        send_event_update_notifications(test_event.id)
 
-        # Check that notification is added and saved correctly
-        mock_save_notifications.assert_called_once()
-        saved_notifications = mock_save_notifications.call_args[0][0]
-        self.assertIn('1', saved_notifications)
-        self.assertEqual(saved_notifications['1'][0]['message'], "Event Update: 'Updated Event' has been updated, please check the event listing to view any changes.")
-        self.assertEqual(saved_notifications['1'][0]['date'], current_date)
+        # Verify update notification was created
+        notification = Notification.query.filter_by(
+            user_id=self.test_user.id,
+            notif_type='update'
+        ).first()
+        self.assertIsNotNone(notification)
+        self.assertIn('Test Event', notification.message)
 
 if __name__ == '__main__':
     unittest.main()

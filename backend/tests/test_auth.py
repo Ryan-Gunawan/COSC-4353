@@ -2,8 +2,9 @@ import unittest
 from unittest.mock import patch, mock_open
 import sys
 sys.path.append('../')
-from app import app
-from routes import load_users, add_user, validate_email, validate_password, save_users, get_user_by_email
+from app import app, db
+from routes import validate_email, validate_password, get_user_by_email
+from models import User
 import json
 from flask import Flask, session
 
@@ -14,55 +15,136 @@ class TestUserAuth(unittest.TestCase):
     def setUp(self):
         # Configure Flask app for testing
         app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        app.config['WTF_CSRF_ENABLED'] = False
         app.config['SECRET_KEY'] = 'testkey' # for session testing
         self.client = app.test_client() # create a test client
         self.client.testing = True
-        # self.app = Flask(__name__)
-        # self.app.secret_key = 'testkey'
-        # self.client = self.app.test_client()
 
-    # Mock the file operations so unit tests don't depend on actual files
-    # @patch('routes.open', new_callable=mock_open, read_data='{"users": []}')
-    @patch('routes.load_users', return_value={"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]})
-    @patch('routes.save_users')
-    def test_register_new_user(self, mock_save_users, mock_load_users):
-        response = self.client.post('/api/register', json={
-            "email": "newuser@example.com",
-            "password": "testpassword"
-        })
+        with app.app_context():
+            db.create_all()
+
+    # Clean up after each test
+    def tearDown(self):
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+
+    def test_successful_registration(self):
+        response = self.client.post('/api/register',
+            json={'email': 'test@example.com',
+                  'password': 'ValidPass123!'
+                  }
+            )
         self.assertEqual(response.status_code, 200)
-        mock_save_users.assert_called()
+        data = json.loads(response.data)
+        self.assertEqual(data['msg'], 'Registration successful')
 
-    # @patch('routes.open', new_callable=mock_open, read_data='{"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": false}]}')
-    @patch('routes.load_users', return_value={"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]})
-    @patch('routes.save_users')
-    def test_register_existing_user(self, mock_save_users, mock_load_users):
-        response = self.client.post('/api/register', json={
-            "email": "testuser@example.com",
-            "password": "newpassword"
-        })
-        # Response should indicate that user already exist
+        with app.app_context():
+            user = User.query.filter_by(email='test@example.com').first()
+            self.assertIsNotNone(user)
+            self.assertFalse(user.admin)
+
+    def test_duplicate_email_registration(self):
+        # First registration
+        self.client.post('/api/register',
+            json={
+                'email': 'test@example.com',
+                'password': 'ValidPass123!'
+            }
+        )
+
+        # Attempt duplicate registration
+        response = self.client.post('/api/register',
+            json={
+                'email': 'test@example.com',
+                'password': 'ValidPass123!'
+            }
+        )
         self.assertEqual(response.status_code, 400)
-        self.assertIn("An account with this email already exists", response.get_json()['msg'])
-        mock_save_users.assert_not_called(); # Ensure save is not called since user already exists
+        data = json.loads(response.data)
+        self.assertEqual(data['msg'], 'An account with this email already exists')
 
-    @patch('routes.load_users', return_value={"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]})
-    def test_login_success(self, mock_load_users):
-        response = self.client.post('/api/login', json={
-            "email": "testuser@example.com",
-            "password": "testpassword"
-        })
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("Login successful", response.get_json()['msg'])
+    def test_invalid_email_registration(self):
+        response = self.client.post('/api/register',
+            json={
+                'email': 'invalid-email',
+                'password': 'ValidPass123!'
+            }
+        )
+        self.assertEqual(response.status_code, 400)
+        data = json.loads(response.data)
+        self.assertEqual(data['msg'], 'Invalid email')
 
-    @patch('routes.load_users', return_value={"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]})
-    def test_login_failure(self, mock_load_users):
-        response = self.client.post('/api/login', json={
-            "email": "testuser@example.com",
-            "password": "wrongpassword"
-        })
+    def test_invalid_password_registration(self):
+        response = self.client.post('/api/register',
+            json={
+                'email': 'test@example.com',
+                'password': ''  # password can't be empty
+            }
+        )
+        self.assertEqual(response.status_code, 400)
+        data = json.loads(response.data)
+        self.assertEqual(data['msg'], 'Invalid password')
+
+    def test_successful_login(self):
+            # First register a user
+            self.client.post('/api/register',
+                json={
+                    'email': 'test@example.com',
+                    'password': 'ValidPass123!'
+                }
+            )
+
+            # Then attempt to login
+            response = self.client.post('/api/login',
+                json={
+                    'email': 'test@example.com',
+                    'password': 'ValidPass123!'
+                }
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data)
+            self.assertTrue(data['success'])
+            self.assertEqual(data['msg'], 'Login successful')
+
+    def test_login_invalid_email(self):
+        response = self.client.post('/api/login',
+            json={
+                'email': 'nonexistent@example.com',
+                'password': 'ValidPass123!'
+            }
+        )
         self.assertEqual(response.status_code, 401)
-        self.assertIn("Invalid email or password", response.get_json()['msg'])
+        data = json.loads(response.data)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['msg'], 'Invalid email or password')
+
+    def test_login_wrong_password(self):
+        # First register a user
+        self.client.post('/api/register',
+            json={
+                'email': 'test@example.com',
+                'password': 'ValidPass123!'
+            }
+        )
+
+        # Then attempt to login with wrong password
+        response = self.client.post('/api/login',
+            json={
+                'email': 'test@example.com',
+                'password': 'WrongPass123!'
+            }
+        )
+        self.assertEqual(response.status_code, 401)
+        data = json.loads(response.data)
+        self.assertFalse(data['success'])
+        self.assertEqual(data['msg'], 'Invalid email or password')
+
+    def test_login_options_request(self):
+        response = self.client.options('/api/login')
+        self.assertEqual(response.status_code, 200)
 
     def test_validate_email(self):
         self.assertTrue(validate_email("email@gmail.com"))
@@ -77,56 +159,6 @@ class TestUserAuth(unittest.TestCase):
        self.assertFalse(validate_password("LQ#JT\]N~%QaIV|UY3>\O;|U&%ZQwFV?d8rc55z7'H^$@u~+/K4>~oTuxEs\{_{bu.<L*3FvA72xvUn,aedoxR!?52xz&Ln,I0nScGBzO~GL+``Ts1(){tWEB:!j;5>\O"))
        self.assertFalse(validate_password(""))
 
-    @patch('routes.os.path.exists', return_value=False)
-    def test_load_users_file_not_exists(self, mock_exists):
-        result = load_users()
-        self.assertEqual(result, {"users": []}) # expecting an emtpy users list
-        mock_exists.assert_called_once_with('dummy/users.json') # Ensure that path check was done
-
-    @patch('routes.os.path.exists', return_value=True)
-    @patch('routes.open', new_callable=mock_open, read_data='{"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": false}]}')
-    def test_load_users_file_exists(self, mock_open_file, mock_exists):
-        result = load_users()
-        expected_data = {"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]}
-        self.assertEqual(result, expected_data)
-        mock_exists.assert_called_once_with('dummy/users.json')
-        mock_open_file.assert_called_once_with('dummy/users.json', 'r') # Ensure file was open in read mode
-
-    # This test is better, probably delete the one above since it doesn't correctly mock loading
-    @patch('routes.os.path.exists', return_value=True)
-    @patch('routes.json.load')
-    @patch('routes.open', new_callable=mock_open, read_data='{"users": [{"email": "testuser@example.com", "password": "password123"}]}')
-    def test_load_users(self, mock_open_file, mock_json_load, mock_exists):
-        mock_json_load.return_value = {"users": [{"email": "testuser@example.com", "password": "password123"}]}
-        result = load_users()
-        self.assertEqual(result, {"users": [{"email": "testuser@example.com", "password": "password123"}]})
-        mock_exists.assert_called_once_with('dummy/users.json')
-        mock_open_file.assert_called_once_with('dummy/users.json', 'r')
-        mock_json_load.assert_called_once()
-
-    @patch('routes.json.dump')
-    @patch('routes.open', new_callable=mock_open)
-    def test_save_users(self, mock_open_file, mock_json_dump):
-        user_data = {"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]}
-        save_users(user_data)
-        mock_open_file.assert_called_once_with('dummy/users.json', 'w')
-        mock_json_dump.assert_called_once_with(user_data, mock_open_file(), indent=4)
-
-    @patch('routes.load_users', return_value={"users": [{"id": "1", "email": "testuser@example.com", "password": "testpassword", "admin": False}]})
-    def test_get_user_by_email(self, mock_load_users):
-        # Test correct email input
-        result = get_user_by_email("testuser@example.com")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["id"], "1")
-        
-        # Test case sensitivity
-        result = get_user_by_email("TESTUSER@EXAMPLE.COM")
-        self.assertIsNotNone(result)
-        self.assertEqual(result["id"], "1")
-
-        # Test no user found
-        result = get_user_by_email("notfound@email.com")
-        self.assertIsNone(result)
 
     def test_is_admin(self):
         # Test when session admin is True
@@ -142,33 +174,6 @@ class TestUserAuth(unittest.TestCase):
         response = self.client.get('/api/isadmin')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {'admin': False})
-
-    @patch('routes.load_users', return_value = {"users": []})
-    @patch('routes.save_users')
-    def test_add_user(self, mock_save_users, mock_load_users):
-        new_user = add_user("newuser@email.com", "password")
-        self.assertEqual(new_user['id'], 1)
-        self.assertEqual(new_user['email'], 'newuser@email.com')
-        self.assertEqual(new_user['password'], 'password')
-        self.assertFalse(new_user['admin'])
-
-        saved_data = mock_save_users.call_args[0][0]
-        self.assertEqual(len(saved_data['users']), 1) 
-
-        new_user2 = add_user("newuser2@email.com", "password2")
-        self.assertEqual(new_user2['id'], 2)
-        self.assertEqual(new_user2['email'], 'newuser2@email.com')
-        self.assertEqual(new_user2['password'], 'password2')
-        self.assertFalse(new_user2['admin'])
-
-        self.assertEqual(len(saved_data['users']), 2) 
-
-        mock_save_users.assert_called()
-        self.assertEqual(saved_data['users'][0], new_user)
-        self.assertEqual(saved_data['users'][1], new_user2)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()

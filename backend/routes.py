@@ -86,18 +86,6 @@ def post_event():
 def register_users():
     return "Hello, welcome to register"
 
-# Loads user data from json file. Simulates loading from a database for testing
-def load_users():
-    if not os.path.exists(USER_FILE):
-        return {"users": []} # if no file, return empty string
-    with open(USER_FILE, 'r') as f:
-        return json.load(f) # returns user json object as dictionary
-
-# Saves updated users.json
-def save_users(data):
-    with open(USER_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
-
 # Function to get user by email
 def get_user_by_email(email):
     from app import db
@@ -105,34 +93,7 @@ def get_user_by_email(email):
     user = User.query.filter_by(email=email).first()
     if user:
         return user
-        # return {
-        #     'id': user.id,
-        #     'email': user.email,
-        #     'password': user.password,
-        #     'admin': user.admin
-        # }
     return None
-    """
-    data = load_users()
-    for user in data['users']:
-        if user['email'].lower() == email.lower(): # ignore case sensitivity
-            return user
-    return None
-    """
-
-# Function to add new user
-def add_user(email, password):
-    data = load_users()
-    new_user_id = len(data['users']) + 1 # increment id
-    new_user = {
-        "id": new_user_id,
-        "email": email,
-        "password": password,
-        "admin": False
-    }
-    data['users'].append(new_user)
-    save_users(data)
-    return new_user
 
 # Functions to validate registration inputs
 def validate_email(email):
@@ -204,11 +165,6 @@ def login():
             return jsonify({"success": True, "msg": "Login successful"}), 200
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
 
-"""# To view login route
-@app.route("/api/login", methods = ["GET"])
-def login_users():
-    return "Hello, welcome to login" """
-
 # Route to get session admin status
 @app.route('/api/isadmin', methods=['GET'])
 def is_admin():
@@ -217,37 +173,8 @@ def is_admin():
         return jsonify({"admin": session['admin']}), 200
     return jsonify({"admin": False}), 401# Default to false if admin is not in session
 
-"""@app.route('/api/isadmin', methods=['PUT'])
-def update_status():
-    # Check if the user is logged in
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({"error": "No user logged in"}), 401
-    # Import User model and db inside the function to avoid circular imports
-    from models import User
-    from app import db
-    # Find the user by user_id
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-    # Update the 'admin' field to True
-    user.admin = True
-    # Commit the changes to the database
-    db.session.commit()
-    return jsonify({"msg": "Admin status updated successfully"}), 200
-    """
 
 ### Notification route and functions ###
-
-# Load notifs from json file
-def load_notifications():
-    with open('dummy/notifications.json', 'r') as file:
-        return json.load(file)
-
-# Saves notifs to json file
-def save_notifications(notifications):
-    with open('dummy/notifications.json', 'w') as file:
-        json.dump(notifications, file, indent=4)
 
 # Get all user notifications
 @app.route('/api/notifications', methods=['GET'])
@@ -263,7 +190,7 @@ def get_notifications():
     result = [notification.to_json() for notification in notifications]
     return jsonify(result), 200
 
-# Delete notifs from json file
+
 @app.route('/api/notifications', methods=['DELETE'])
 def delete_notification():
     from app import db
@@ -286,23 +213,6 @@ def delete_notification():
     db.session.delete(notification)
     db.session.commit()
     return jsonify({'msg': 'Notification deleted successfully'}), 204
-
-# # Sends update to frontend whenever a new notification is added, or if any notifications are unread.
-# @app.route('/api/notifications/unread', methods=['GET'])
-# def check_unread_notification():
-#     user_id = session.get('user_id')
-#     if not user_id:
-#         return jsonify({'error': 'No user logged in'}), 401
-#     notifications = load_notifications()
-#     user_notifications = notifications.get(user_id, [])
-#     has_unread = any(notification['read'] == False for notification in user_notifications)
-#     return jsonify({'has_unread': has_unread})
-#
-# def has_unread_notificiations(user_id):
-#     notifications = load_notifications()
-#     user_notifications = notifications.get(user_id, [])
-#     return any(notification['read'] == False for notification in user_notifications)
-
 
 # Send event assignment notification
 @app.route('/api/send-assignment-notification', methods=['POST'])
@@ -341,8 +251,6 @@ def send_assignment_notification():
     return jsonify({'msg': 'Notification sent successfully'}), 200
 
 # Sends reminder as event dates approach. Checks daily for upcoming events
-# Once we do database consider tracking whether a reminder has been sent for each user and event
-# To better handle repeat reminders and timings
 def send_reminder_notifications():
     from models import Event, User, Notification
     from app import app
@@ -392,7 +300,7 @@ scheduler.start()
 # When admin updates an event all the assigned users are sent an update notification
 # may need to change to use a route: get request data with event_id
 def send_event_update_notifications(event_id):
-    from modles import Event, User, Notification
+    from models import Event, User, Notification
     today = date.today()
     current_date = today.strftime("%m-%d-%y")
     event = Event.query.get(event_id)
