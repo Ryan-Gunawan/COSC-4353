@@ -13,7 +13,7 @@ const EventList = () => {
     location: "",
     description: "",
     urgency: "",
-    skills: [],
+    skills: "",
   });
 
   useEffect(() => {
@@ -45,7 +45,8 @@ const EventList = () => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: name === 'skills' ? value.split(',').map(skill => skill.trim()) : value,
+      [name]: value,
+      // [name]: name === 'skills' ? value.split(',').map(skill => skill.trim()) : value,
     }));
   };
 
@@ -82,23 +83,34 @@ const EventList = () => {
       location: event.location,
       description: event.description,
       urgency: event.urgency || '',
-      skills: event.skills || '',
+      // skills: event.skills ? JSON.parse(event.skills) : [], // parse the json string into an array
+      skills: event.skills ? JSON.parse(event.skills).join(', ') : '', // convert to comma-separated strings for editing
     });
   };
 
   const saveEvent = async () => {
     try {
+      const skillsArray = formData.skills
+        .split(',')
+        .map(skill => skill.trim())
+        .filter(Boolean);
+
+      const dataToSend = {
+        ...formData,
+        skills: JSON.stringify(skillsArray) // convert back to JSON string for backend
+      }
+
       await fetch(`http://127.0.0.1:5000/api/eventlist/${editingEvent}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       setEvents((prevEvents) =>
         prevEvents.map(event =>
-          event.id === editingEvent ? { ...event, ...formData } : event
+          event.id === editingEvent ? { ...event, ...dataToSend } : event
         )
       );
       setEditingEvent(null);  // Exit edit mode after saving
@@ -162,7 +174,9 @@ const EventList = () => {
                   <input
                     type="text"
                     name="skills"
-                    value={formData.skills.join(', ')}
+                    // value={formData.skills.join(', ')}
+                    // value={Array.isArray(formData.skills) ? formData.skills.join(', ') : ''}
+                    value={formData.skills}
                     onChange={handleInputChange}
                     placeholder="Skills (comma separated)"
                   />
@@ -181,7 +195,7 @@ const EventList = () => {
                 <div>
                   <h2>{event.name}</h2>
                   <p><strong>Date:</strong> {
-                      event.date ? 
+                    event.date ?
                       new Date(event.date).toLocaleString('en-CA', {
                         year: 'numeric',
                         month: '2-digit',
@@ -195,8 +209,8 @@ const EventList = () => {
                   <p><strong>Location:</strong> {event.location}</p>
                   <p><strong>Urgency:</strong> {event.urgency ? event.urgency : 'N/A'}</p>
                   <p><strong>Skills Preferred:</strong> {
-                      event.skills ? 
-                      JSON.parse(event.skills).join(', ') : 
+                    event.skills ?
+                      JSON.parse(event.skills).join(', ') :
                       'No specific skills required'
                   }</p>
                   <p>{event.description}</p>

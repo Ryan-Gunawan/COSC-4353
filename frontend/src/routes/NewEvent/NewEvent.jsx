@@ -29,14 +29,19 @@ function NewEvent() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();  // Prevent default form submission
-  
+
     try {
+      // For converting datetime obj to string. But it works without having to do this.
+      // const dateObj = new Date(formData.date);
+      // const formattedDate = `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-${dateObj.getDate()}`;
+
       // Convert skills to JSON string for submission without modifying the original formData
       const formDataToSubmit = {
         ...formData,
         skills: JSON.stringify(formData.skills),
+        // date: formattedDate
       };
-  
+
       const response = await fetch('http://127.0.0.1:5000/api/newevent', {
         method: 'POST',
         headers: {
@@ -44,11 +49,11 @@ function NewEvent() {
         },
         body: JSON.stringify(formDataToSubmit),
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       const data = await response.json();
       console.log(data.message);  // Show success message
       navigate('/success');
@@ -56,7 +61,7 @@ function NewEvent() {
       console.error('Error submitting form:', error);
     }
   };
-  
+
 
   return (
     <>
