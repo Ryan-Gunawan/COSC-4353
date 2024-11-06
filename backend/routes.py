@@ -111,9 +111,18 @@ def register():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-    user = get_user_by_email(email)
+
+    # Clear prev session data
+    session.pop("user_id", None)
+    session.pop("admin", None)
+    session.clear()
+
+    # print("cleared session")
+    # print(f"Session ID: {session['user_id']}")
+    # print(f"Admin status: {session['admin']}")
 
     # Check if user already exists
+    user = get_user_by_email(email)
     if user is not None:
         return jsonify({"msg": "An account with this email already exists"}), 400
 
@@ -133,6 +142,7 @@ def register():
     new_user.set_password(password) # hash password
     db.session.add(new_user)
     db.session.commit()
+
     return jsonify({"msg": "Registration successful"}), 200
 
 # Test login function
@@ -159,10 +169,17 @@ def login():
             session['user_id'] = user.id
             session['admin'] = user.admin
 
+            if not user.profile_setup:
+                profile_setup = False
+                user.profile_setup = True
+                db.session.commit()
+            else:
+                profile_setup = True
+
             print(f"User logged in with ID: {session['user_id']}")
             print(f"Session Data: {session}")
 
-            return jsonify({"success": True, "msg": "Login successful"}), 200
+            return jsonify({"success": True, "profile_setup": profile_setup, "msg": "Login successful"}), 200
     return jsonify({"success": False, "msg": "Invalid email or password"}), 401
 
 # Route to get session admin status

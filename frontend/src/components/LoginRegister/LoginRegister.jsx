@@ -88,7 +88,8 @@ const LoginRegister = () => {
       if (response.status === 200) {
         alert(result.msg); // show success msg
         //alert("Registered successfully");
-        navigate("/userprofile");
+        // navigate("/");
+        loginLink();
       }
       else if (result.msg === "An account with this email already exists") {
         //alert(result.msg) // show error msg
@@ -122,7 +123,11 @@ const LoginRegister = () => {
       // Gets result from backend. If email and password are valid go to home otherwise send error msg
       const result = await response.json();
       if (result.success) {
-        navigate("/home");
+        if (result.profile_setup) {
+          navigate("/home");
+        } else {
+          navigate("/userprofile");
+        }
         // alert("Login successful");
       } else {
         setLoginError("Sorry, your email or password was incorrect. Please double-check and try again.")

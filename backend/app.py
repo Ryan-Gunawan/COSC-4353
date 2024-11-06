@@ -18,6 +18,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # Allows cookies to be sent during local dev
 app.config['SESSION_COOKIE_SECURE'] = False #  Allows cookies to be sent over HTTP without security
 app.config['SESSION_COOKIE_DOMAIN'] = None # Allows both localhost and 127.0.0.1 to work
+app.config["SESSION_PERMANENT"] = False # Closing browser windows clears session data
+app.config["SESSION_REFRESH_EACH_REQUEST"] = True
 
 # In production use these settings:
 # app.config['SESSION_COOKIE_SAMESITE'] = 'None' # required for cross-site requests. When using diff ports

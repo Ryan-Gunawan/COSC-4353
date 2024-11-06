@@ -30,6 +30,7 @@ class User(db.Model):
     skills = db.Column(JSON, nullable=True)
     preference = db.Column(db.String(255), nullable=True)
     availability = db.Column(JSON, nullable=True)
+    profile_setup = db.Column(db.Boolean, default=False, nullable=False) # Tracks whether user has already setup profile or not
     # Because of the relationship between user and Event, there is an implicit events col for user's event history.
     # So instead of using volunteer col, you can access it with user.events
     # volunteer = db.relationship('Event', secondary=event_user, backref='users') # Volunteer history
