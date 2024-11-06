@@ -1,5 +1,5 @@
 import unittest
-from app import app
+from app import app, db
 import json
 import os
 import sys
@@ -10,75 +10,79 @@ from unittest.mock import patch, MagicMock
 from models import User
 
 class TestUserInfo(unittest.TestCase):
-    pass
-    # def setUp(self):
-    #
-    #     app.config['TESTING'] = True
-    #     app.config['SECRET_KEY'] = 'testkey' # for session testing
-    #     self.client = app.test_client() # create a test client
-    #     self.client.testing = True
-    #     self.app = app
-    #     self.app_context = self.app.app_context()
-    #     
-    # @patch('app.User')
-    # def test_get_userinfo(self, mock_user):
-    #     # Mocking session
-    #     with self.client as client:
-    #         with client.session_transaction() as sess:
-    #             sess['user_id'] = 1
-    #
-    #         # Mock user retrieval and .to_json() method
-    #         mock_user_instance = mock_user.query.get.return_value
-    #         mock_user_instance.to_json.return_value = {'address1': '123 Banana St.', 'address2': '', 'admin': False, 'availability': ['2024-10-22'], 'city': 'Houston', 'email': 'email@gmail.com', 'fullname': 'Bob Brown', 'history': ['Tech Conference 2024', 'Music Festival', 'Startup Pitch Night', 'Helping Teddy with his project', 'Updated Event Name', 'Some event'], 'id': 1, 'preference': '', 'skills': ['communication', 'creativity'], 'state': 'TX', 'zipcode': '12345'}
-    #
-    #         response = client.get("/api/userprofile")
-    #         self.assertEqual(response.status_code, 200)
-    #         self.assertEqual(response.json, mock_user_instance.to_json())
-    #
-    # @patch('app.db.session.commit')
-    # @patch('app.User')
-    # def test_update_userinfo(self, mock_get, mock_commit):
-    #     # Create a mock user object
-    #     mock_user = MagicMock()
-    #     mock_user.fullname = 'Musk'
-    #     mock_user.address1 = '123 Maple Syrup'
-    #     mock_user.address2 = ''
-    #     mock_user.city = 'Houston'
-    #     mock_user.state = 'TX'
-    #     mock_user.zipcode = '12345'
-    #     mock_user.skills = ["communication", "creativity"]
-    #     mock_user.preference = ''
-    #     mock_user.availability = ["2024-10-22"]
-    #
-    #     updated_data = {
-    #         "fullname": "Musk",
-    #         "address1": "99 Maple Syrup",
-    #         "address2": "",
-    #         "city": "Houston",
-    #         "state": "TX",
-    #         "zipcode": "99999",
-    #         "skills": ["communication", "creativity"],
-    #         "preference": "",
-    #         "availability": []
-    #     }
-    #
-    #     # Send a PUT request to update the user profile
-    #     response = self.client.put('/api/userprofile/1', data=json.dumps(updated_data), content_type='application/json')
-    #
-    #     # Simulate change of database
-    #     mock_user.address1 = updated_data['address1']
-    #     mock_user.zipcode = updated_data['zipcode']
-    #     mock_user.availability = updated_data['availability']
-    #
-    #     # Assert the response
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(response.json['msg'], 'User info updated successfully')
-    #     self.assertEqual(mock_user.address1, '99 Maple Syrup')
-    #     self.assertEqual(mock_user.zipcode, '99999')
-    #     self.assertEqual(mock_user.availability, [])
-    #
-    #     # Check that commit was called once
-    #     mock_commit.assert_called_once()
+    def setUp(self):
+        app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        app.config['SECRET_KEY'] = 'testkey' # for session testing
+        self.client = app.test_client() # create a test client
+        self.client.testing = True
+        self.app_context = app.app_context()
+        self.app_context.push()
+
+        # Create all tables
+        db.create_all()
+
+        # Create test user
+        self.test_user = User(
+            id = '1',
+            email = 'email@gmial.com',
+            password = 'password',
+            fullname = 'Full Name',
+            address1 = '50 Harvey Drive',
+            city = 'Campbell',
+            state = 'CA',
+            zipcode = '95008'
+        )
+        db.session.add(self.test_user)
+        db.session.commit()
+
+        # Store test user data for comparison
+        self.test_user_data = {
+            'id': '1',
+            'email': 'email@gmial.com',
+            'password': 'password',
+            'fullname':'Full Name',
+            'address1': '50 Harvey Drive',
+            'city': 'Campbell',
+            'state': 'CA',
+            'zipcode': '95008'
+        }
+    
+    def tearDown(self):
+        """Clean up after each test"""
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+        
+    def test_get_userinfo(self): 
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = self.test_user.id
+
+        response = self.client.get('/api/userprofile')
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data)
+
+        self.assertEqual(data.get('email'), self.test_user_data['email'])
+        self.assertEqual(data.get('fullname'), self.test_user_data['fullname'])
+        self.assertEqual(data.get('city'), self.test_user_data['city'])
+
+    def test_update_userinfo(self):
+        updated_data = {
+            'fullname':'Real Full Name',
+            'address1': '100 Harvey Drive'
+        }
+
+        response = self.client.put(f'/api/userprofile/{self.test_user.id}', data=json.dumps(updated_data), content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.data)
+        self.assertEqual(data['msg'], 'User info updated successfully')
+
+        # Fetch the updated user and verify changes
+        updated_user = User.query.get(self.test_user.id)
+        self.assertEqual(updated_user.fullname, 'Real Full Name')
+        self.assertEqual(updated_user.address1, '100 Harvey Drive')
 
 if __name__ == '__main__':
     unittest.main()
