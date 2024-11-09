@@ -7,7 +7,6 @@ const PeopleEventMatcher = () => {
   const [events, setEvents] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState({});
   const [alertMessage, setAlertMessage] = useState('');
-  const [reportType, setReportType] = useState('');
 
   useEffect(() => {
     // Fetch additional events from the database
@@ -58,65 +57,11 @@ const PeopleEventMatcher = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (reportType) {
-      // Use fetch to connect to backend API
-      fetch(`http://localhost:5000/api/generate_report?type=${reportType}`, {
-        method: 'GET',
-        credentials: 'include' // Ensure session cookies are sent
-      })
-        .then(response => {
-          if (response.ok) {
-            return response.blob(); // Convert to blob for file download
-          }
-          throw new Error('Failed to generate report');
-        })
-        .then(blob => {
-          // Create a URL for the blob and trigger download
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `report.${reportType}`;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-        })
-        .catch(error => {
-          console.error('Error downloading report:', error);
-        });
-    }
-  };
 
   return (
     <div>
       <Navbar />
       <h2 style={styles.header}>Event Matcher</h2>
-
-      {/* Generate Report Section */}
-      <div style={styles.generateReportContainer}>
-        <label style={styles.reportLabel}>Generate Report:</label>
-        <select
-          style={styles.dropdown}
-          value={reportType}
-          onChange={(e) => setReportType(e.target.value)}
-        >
-          <option value="">Select format</option>
-          <option value="pdf">PDF</option>
-          <option value="csv">CSV</option>
-        </select>
-        <button
-          style={{
-            ...styles.button,
-            marginLeft: '15px',
-            opacity: reportType ? 1 : 0.5,
-            cursor: reportType ? 'pointer' : 'default'
-          }}
-          onClick={handleDownload}
-          disabled={!reportType}
-        >
-          Download
-        </button>
-      </div>
 
       <div style={styles.eventList}>
         {events.map(event => (
