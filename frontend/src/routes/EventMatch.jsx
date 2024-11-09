@@ -7,19 +7,20 @@ const PeopleEventMatcher = () => {
   const [events, setEvents] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState({});
   const [alertMessage, setAlertMessage] = useState('');
+  const [reportType, setReportType] = useState('');
 
   useEffect(() => {
     // Fetch additional events from the database
     fetch("http://127.0.0.1:5000/api/eventlist")
-    .then((response) => response.json())
-    .then((data) => {
-      const uniqueEvents = data.filter(
-        (event, index, self) =>
-          index === self.findIndex((e) => e.id === event.id)
-      );
-      setEvents(uniqueEvents);
-    })
-    .catch((error) => console.error('Error fetching events:', error));
+      .then((response) => response.json())
+      .then((data) => {
+        const uniqueEvents = data.filter(
+          (event, index, self) =>
+            index === self.findIndex((e) => e.id === event.id)
+        );
+        setEvents(uniqueEvents);
+      })
+      .catch((error) => console.error('Error fetching events:', error));
 
     // Fetch users from the /api/userslist endpoint
     fetch("http://127.0.0.1:5000/api/users")
@@ -57,18 +58,72 @@ const PeopleEventMatcher = () => {
     }
   };
 
+  const handleDownload = () => {
+    if (reportType) {
+      // Use fetch to connect to backend API
+      fetch(`http://localhost:5000/api/generate_report?type=${reportType}`, {
+        method: 'GET',
+        credentials: 'include' // Ensure session cookies are sent
+      })
+        .then(response => {
+          if (response.ok) {
+            return response.blob(); // Convert to blob for file download
+          }
+          throw new Error('Failed to generate report');
+        })
+        .then(blob => {
+          // Create a URL for the blob and trigger download
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `report.${reportType}`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        })
+        .catch(error => {
+          console.error('Error downloading report:', error);
+        });
+    }
+  };
+
   return (
     <div>
       <Navbar />
       <h2 style={styles.header}>Event Matcher</h2>
+
+      {/* Generate Report Section */}
+      <div style={styles.generateReportContainer}>
+        <label style={styles.reportLabel}>Generate Report:</label>
+        <select
+          style={styles.dropdown}
+          value={reportType}
+          onChange={(e) => setReportType(e.target.value)}
+        >
+          <option value="">Select format</option>
+          <option value="pdf">PDF</option>
+          <option value="csv">CSV</option>
+        </select>
+        <button
+          style={{
+            ...styles.button,
+            marginLeft: '15px',
+            opacity: reportType ? 1 : 0.5,
+            cursor: reportType ? 'pointer' : 'default'
+          }}
+          onClick={handleDownload}
+          disabled={!reportType}
+        >
+          Download
+        </button>
+      </div>
+
       <div style={styles.eventList}>
-
-
         {events.map(event => (
           <div key={event.id} style={styles.eventBox}>
             <h3>{event.name}</h3>
             <p><strong>Date:</strong> {
-                event.date ? 
+              event.date ?
                 new Date(event.date).toLocaleString('en-CA', {
                   year: 'numeric',
                   month: '2-digit',
@@ -82,11 +137,11 @@ const PeopleEventMatcher = () => {
             <p><strong>Location:</strong> {event.location}</p>
             <p><strong>Description:</strong> {event.description}</p>
             <p><strong>Skills Preferred:</strong> {
-                      event.skills ? 
-                      JSON.parse(event.skills).join(', ') : 
-                      'No specific skills required'
-                  }</p>
-            
+              event.skills ?
+                JSON.parse(event.skills).join(', ') :
+                'No specific skills required'
+            }</p>
+
             <select
               style={styles.dropdown}
               onChange={(e) => setSelectedUsers(prev => ({ ...prev, [event.id]: e.target.value }))}
@@ -119,6 +174,23 @@ const styles = {
     padding: '20px 0',
     marginBottom: '20px',
     fontSize: '2em',
+  },
+  generateReportContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '20px auto',
+    maxWidth: '400px',
+    padding: '20px',
+    backgroundColor: '#f8f9fa',
+    borderRadius: '8px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+  },
+  reportLabel: {
+    marginRight: '10px',
+    marginTop: '8px',
+    fontWeight: 'bold',
+    textAlign: 'center'
   },
   eventList: {
     display: 'grid',

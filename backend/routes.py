@@ -1,17 +1,25 @@
 from app import app, db
-from flask import Flask, request, jsonify, session, redirect, url_for
+from flask import Flask, request, jsonify, session, redirect, url_for, send_file, Blueprint, Response
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph
 import json
 import re
 import os
+import csv
+from io import BytesIO, StringIO
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
-# from flask_socketio import SocketIO, emit, join_room
 
 USER_FILE = 'dummy/users.json'
 
 # Needed to periodically check to send reminder notifications
 scheduler = BackgroundScheduler()
 
+# To get report type from front end
+report_bp = Blueprint('report_bp', __name__)
 
 # Get all users
 # Query all users from db and return them as a list
@@ -433,3 +441,232 @@ def match_user():
         return jsonify({"msg": "Event added to volunteer list"}), 200
     else:
         return jsonify({"msg": "Event already in volunteer list"}), 200
+
+@report_bp.route('/api/generate_report', methods=['GET'])
+def generate_report():
+    report_type = request.args.get('type') # get tpe pdf or csv from frontend query
+
+    if report_type == "pdf":
+        return generate_pdf_report()
+    elif report_type == "csv":
+        return generate_csv_report()
+        # return jsonify({"success": False, "msg": "Invalid report type csv"}), 400
+    else:
+        return jsonify({"success": False, "msg": "Invalid report type"}), 400
+
+def generate_pdf_report():
+    from models import User, Event
+
+    if not is_admin():
+        return jsonify({"success": False, "msg": "Unauthorized access"}), 403
+
+    def wrap_text(text, max_width):
+        """Helper function to wrap text within a specified width."""
+        lines = []
+        words = text.split(' ')
+        line = ''
+        for word in words:
+            if canvas_obj.stringWidth(line + word, "Helvetica", 10) < max_width:
+                line += f"{word} "
+            else:
+                lines.append(line)
+                line = f"{word} "
+        lines.append(line)  # Add the last line
+        return lines
+
+    # Create a PDF file in memory
+    pdf_buffer = BytesIO()
+    canvas_obj = canvas.Canvas(pdf_buffer, pagesize=letter)
+    canvas_obj.setTitle("Volunteer Activity and Event Management Report")
+
+    # Adjust margins
+    left_margin = 50
+    right_margin = 540  # page width (612) - 72 margin
+    content_width = right_margin - left_margin
+
+    # Title - Centered
+    title = "Volunteer Activity and Event Management Report"
+    title_width = canvas_obj.stringWidth(title, "Helvetica-Bold", 16)
+    canvas_obj.setFont("Helvetica-Bold", 16)
+    canvas_obj.drawString((612 - title_width) / 2, 750, title)  # Center the title
+
+    canvas_obj.setFont("Helvetica", 12)  # Set default font back to regular
+
+    # Move the dividing line above the "1. Volunteer Participation History" header
+    canvas_obj.setStrokeColor(colors.black)
+    canvas_obj.setLineWidth(1)
+    canvas_obj.line(left_margin, 725, right_margin, 725)  # Line above the first section header
+
+    # Section 1 Header: Volunteer Participation History (Bold)
+    canvas_obj.setFont("Helvetica-Bold", 12)
+    canvas_obj.drawString(left_margin, 710, "Volunteer Participation History")
+    canvas_obj.setFont("Helvetica", 12)  # Reset to regular font
+
+    y_position = 690
+    users = User.query.all()
+    user_counter = 1  # Counter for numbering users
+    for user in users:
+        canvas_obj.drawString(left_margin, y_position, f"{user_counter}. Name: {user.fullname}, Email: {user.email}")
+        y_position -= 20
+
+        events = user.events
+        if events:
+            # Add the 'Events:' label before listing events
+            canvas_obj.drawString(left_margin + 20, y_position, "Events:")
+            y_position -= 20
+            for event in events:
+                # Event name and right-aligned date
+                canvas_obj.drawString(left_margin + 40, y_position, f"- {event.name}")
+                canvas_obj.drawRightString(right_margin, y_position, f"{event.date}")
+                y_position -= 20
+        else:
+            canvas_obj.drawString(left_margin + 20, y_position, "No participation history.")
+            y_position -= 20
+        y_position -= 10
+
+        user_counter += 1  # Increment user counter
+
+        # If the page gets filled, create a new one
+        if y_position < 50:
+            canvas_obj.showPage()
+            y_position = 750
+
+    # Draw a dividing line before section 2
+    y_position -= 10  # Adjust to ensure the line doesn't overlap the content
+    canvas_obj.line(left_margin, y_position, right_margin, y_position)  # One line between sections
+
+    # Section 2 Header: Event List with Volunteer Assignments (Bold)
+    y_position -= 20  # Add space after the line before the next header
+    canvas_obj.setFont("Helvetica-Bold", 12)
+    canvas_obj.drawString(left_margin, y_position, "Event List with Volunteer Assignments")
+    canvas_obj.setFont("Helvetica", 12)  # Reset to regular font
+
+    # Space after the second header
+    y_position -= 20  # Ensure enough space before the content starts
+
+    y_position -= 10  # Adjust space before the content starts
+    events = Event.query.all()
+    event_counter = 1  # Counter for numbering events
+    for event in events:
+        # Number each event
+        canvas_obj.drawString(left_margin, y_position, f"{event_counter}. Event: {event.name}")
+        canvas_obj.drawRightString(right_margin, y_position, f"{event.date}")
+        y_position -= 20
+
+        canvas_obj.drawString(left_margin + 20, y_position, f"Location: {event.location}")
+        y_position -= 20
+
+        # Parse the JSON string into a list
+        if event.skills:
+            try:
+                skills_list = json.loads(event.skills)
+                # Join the list into a comma-separated string
+                skills_str = ", ".join(skills_list)
+            except json.JSONDecodeError:
+                skills_str = event.skills  # Fallback in case the JSON is malformed
+        else:
+            skills_str = "No skills available"  # Fallback if there are no skills
+
+        # Now print the skills
+        canvas_obj.drawString(left_margin + 20, y_position, f"Skills: {skills_str}")
+        y_position -= 20
+
+        # Wrap description text
+        description_lines = wrap_text(event.description, content_width)
+        canvas_obj.drawString(left_margin + 20, y_position, "Description: ")  # Add the 'Description:' label
+        y_position -= 15
+
+        # Print the wrapped description text
+        for line in description_lines:
+            canvas_obj.drawString(left_margin + 40, y_position, line)  # Indent the wrapped lines
+            y_position -= 15
+
+        if event.assigned_users:
+            canvas_obj.drawString(left_margin + 20, y_position, "Assigned Volunteers:")
+            y_position -= 20
+            for user in event.assigned_users:
+                canvas_obj.drawString(left_margin + 40, y_position, f"- {user.fullname} ({user.email})")
+                y_position -= 20
+        else:
+            canvas_obj.drawString(left_margin + 20, y_position, "Assigned Volunteers: None")
+            y_position -= 20
+
+        y_position -= 30
+
+        event_counter += 1  # Increment event counter
+
+        # If the page gets filled, create a new one
+        if y_position < 50:
+            canvas_obj.showPage()
+            y_position = 750
+
+    canvas_obj.save()
+    pdf_buffer.seek(0)
+
+    return send_file(pdf_buffer, as_attachment=True, download_name="full_report.pdf", mimetype='application/pdf')
+
+def generate_csv_report():
+    from models import User, Event
+
+    # Check if the user is an admin
+    if not is_admin():
+        return jsonify({"success": False, "msg": "Unauthorized access"}), 403
+
+    # Create a CSV in memory
+    csv_output = StringIO()
+    csv_writer = csv.writer(csv_output)
+
+    # Write the headers to the CSV file
+    csv_writer.writerow(['Volunteer Activity and Event Management Report'])
+    csv_writer.writerow([''])
+
+    # Volunteer Participation History
+    csv_writer.writerow(['1. Volunteer Participation History'])
+    csv_writer.writerow(['Name', 'Email', 'Events'])
+    
+    users = User.query.all()
+    for user in users:
+        events_list = []
+        for event in user.events:
+            events_list.append(f"{event.name} on {event.date}")
+        events_str = ", ".join(events_list) if events_list else "No participation history"
+        csv_writer.writerow([user.fullname, user.email, events_str])
+    
+    csv_writer.writerow([''])
+    
+    # Event List with Volunteer Assignments
+    csv_writer.writerow(['2. Event List with Volunteer Assignments'])
+    csv_writer.writerow(['Event Name', 'Date', 'Location', 'Description', 'Skills', 'Assigned Volunteers'])
+    
+    events = Event.query.all()
+    for event in events:
+        # Format skills
+        if event.skills:
+            try:
+                skills_list = json.loads(event.skills)
+                skills_str = ", ".join(skills_list)
+            except json.JSONDecodeError:
+                skills_str = event.skills  # Fallback if skills are not in valid JSON format
+        else:
+            skills_str = "No skills available"
+
+        # Get assigned volunteers
+        if event.assigned_users:
+            assigned_volunteers = ", ".join([f"{user.fullname} ({user.email})" for user in event.assigned_users])
+        else:
+            assigned_volunteers = "None"
+
+        # Write event details to CSV
+        csv_writer.writerow([event.name, event.date, event.location, event.description, skills_str, assigned_volunteers])
+
+    # Reset the cursor of the StringIO buffer
+    csv_output.seek(0)
+
+    # Return the CSV as a downloadable file
+    return Response(
+        csv_output,
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment;filename=full_report.csv'}
+    )
+
+app.register_blueprint(report_bp)
