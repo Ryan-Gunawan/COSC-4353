@@ -56,6 +56,9 @@ def update_event(event_id):
     event.urgency = data.get('urgency', event.urgency)
     event.date = data.get('date', event.date)
     db.session.commit()
+
+    # Send update notifications to all assigned users
+    send_event_update_notifications(event_id)
     return jsonify({"msg": "Event updated successfully"}), 200
 
 @app.route("/api/eventlist/<int:event_id>", methods=["DELETE"])
@@ -239,7 +242,30 @@ def delete_notification():
     db.session.commit()
     return jsonify({'msg': 'Notification deleted successfully'}), 204
 
-# Send event assignment notification
+# Helper function to create assignment notification
+def create_assignment_notification(user_id, event_name, event_date):
+    from models import User, Notification
+    user = User.query.get(user_id)
+    if not user:
+        print(f"User with ID {user_id} not found.")
+        return False
+
+    # Create and add notification to db
+    today = date.today()
+    current_date = today.strftime("%Y-%m-%d")
+    new_notification = Notification(
+        user_id=user_id,
+        title="Assignment",
+        date=current_date,
+        message=f"Event assigned: {event_name} on {event_date}",
+        notif_type="assignment"
+    )
+    db.session.add(new_notification)
+    db.session.commit()
+    print(f"Notification sent to user {user_id} for event '{event_name}'.")
+    return True
+
+# Send event assignment notification. Route used for testing sending notifications.
 @app.route('/api/send-assignment-notification', methods=['POST'])
 def send_assignment_notification():
     from models import User, Notification
@@ -252,28 +278,11 @@ def send_assignment_notification():
     if not user_id or not event_name or not event_date:
         return jsonify({'msg': 'user_id, event_name, and event_date are required fields'}), 400
 
-    # Get user from database
-    user = User.query.get(user_id)
-    if not user:
+    # Use the helper function to create the notification
+    if create_assignment_notification(user_id, event_name, event_date):
+        return jsonify({'msg': 'Notification sent successfully'}), 200
+    else:
         return jsonify({'msg': 'User not found'}), 404
-
-    # Create the new notification
-    today = date.today()
-    current_date = today.strftime("%Y-%m-%d")
-    new_notification = Notification(
-        user_id = user_id,
-        title = "Assignment",
-        date = current_date,
-        message = "Event assigned: " + event_name + " on " + event_date,
-        notif_type = "assignment"
-    )
-
-    # add notification to the database
-    db.session.add(new_notification)
-    db.session.commit()
-
-    print(f"Notification sent to user {user_id} for event '{event_name}'.")
-    return jsonify({'msg': 'Notification sent successfully'}), 200
 
 # Sends reminder as event dates approach. Checks daily for upcoming events
 def send_reminder_notifications():
@@ -327,7 +336,7 @@ scheduler.start()
 def send_event_update_notifications(event_id):
     from models import Event, User, Notification
     today = date.today()
-    current_date = today.strftime("%m-%d-%y")
+    current_date = today.strftime("%Y-%m-%d")
     event = Event.query.get(event_id)
     if not event.assigned_users:
         print("No users assigned to this event.")
@@ -337,7 +346,7 @@ def send_event_update_notifications(event_id):
             user_id = user.id,
             title = "Update",
             date = current_date,
-            message = f"Event reminder: '{event.name}' has been updated, please check the event listing to view any changes.",
+            message = f"Event update: '{event.name}' has been updated. Please check the event listing to view any changes.",
             notif_type = "update"
         )
         db.session.add(new_notification)
@@ -438,7 +447,12 @@ def match_user():
     if user not in event.assigned_users:
         event.assigned_users.append(user) # automatically appends to user.volunteer since they're connected on db
         db.session.commit()
-        return jsonify({"msg": "Event added to volunteer list"}), 200
+
+        # Send assignment notification to user
+        if create_assignment_notification(user_id, event.name, event.date):
+            return jsonify({"msg": "Event added to volunteer list and notification sent"}), 200
+        else:
+            return jsonify({"msg": "Event added to volunteer list, but failed to send notification"}), 200
     else:
         return jsonify({"msg": "Event already in volunteer list"}), 200
 
