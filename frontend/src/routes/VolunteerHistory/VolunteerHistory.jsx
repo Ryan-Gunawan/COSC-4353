@@ -66,9 +66,7 @@ function VolunteerHistory() {
                                     <p><strong>Date:</strong> {job.date}</p>
                                     <p><strong>Description:</strong> {job.description}</p>
                                     <p><strong>Location:</strong> {job.location}</p>
-                                    {/* <p><strong>Required Skills:</strong> {job.skills.join(", ")}</p> */}
                                     <p><strong>Urgency:</strong> {job.urgency}</p>
-                                    <p><strong>Status:</strong> {job.eventStatus} </p>
                                     <p><strong></strong></p>
                                 </div>
                             ))
