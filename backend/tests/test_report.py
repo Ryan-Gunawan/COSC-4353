@@ -1,105 +1,77 @@
 import unittest
-from unittest.mock import patch, MagicMock
-import json
+from io import BytesIO
+from flask import request, current_app
 import sys
 sys.path.append('../')
 from app import app, db
-from models import User, Event
+from app import User, Event
+from routes import generate_report, generate_pdf_report
+from reportlab.pdfgen import canvas
 
-class EventMatcherAPITestCase(unittest.TestCase):
-    def setUp(self):
+class ReportTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Set up the test context."""
         app.config['TESTING'] = True
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-        app.config['SECRET_KEY'] = 'testkey'
-        self.client = app.test_client()
-        self.client.testing = True
-        self.app_context = app.app_context()
-        self.app_context.push()
+        cls.client = app.test_client()
+        with app.app_context():
+            db.create_all()
 
-        # Create all tables
-        db.create_all()
+            # Create test data
+            user1 = User(fullname="John Doe", email="john@example.com", password="securepassword")
+            user2 = User(fullname="Jane Smith", email="jane@example.com", password="securepassword2")
+            event1 = Event(name="Charity Run", date="2024-11-20", location="Park", description="Run for a cause")
+            event2 = Event(name="Food Drive", date="2024-12-01", location="Community Center", description="Help distribute food")
 
-        # Create test user
-        self.test_user = User(
-            email='email@gmail.com',
-            password='password',
-            fullname='Full Name',
-            address1='50 Harvey Drive',
-            city='Campbell',
-            state='CA',
-            zipcode='95008'
-        )
-        db.session.add(self.test_user)
+            user1.events.append(event1)
+            db.session.add_all([user1, user2, event1, event2])
+            db.session.commit()
 
-        # Create test event
-        self.test_event = Event(
-            name='Test Event',
-            location='Test Location',
-            date='2024-12-25'
-        )
-        db.session.add(self.test_event)
-        db.session.commit()
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up the test database."""
+        with app.app_context():
+            db.drop_all()
 
-    def tearDown(self):
-        """Clean up after each test"""
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
+    def test_generate_report_invalid_type(self):
+        """Test generate_report with an invalid report type."""
+        response = self.client.get('/api/generate_report?type=invalid')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b'Invalid report type', response.data)
 
-    def test_get_users_list(self):
-        """Test fetching the user list from the /api/users route."""
-        response = self.client.get('/api/users')
+    def test_generate_report_pdf(self):
+        """Test generate_report for PDF generation."""
+        response = self.client.get('/api/generate_report?type=pdf')
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
-        self.assertIsInstance(data, list)
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['email'], 'email@gmail.com')
+        self.assertEqual(response.content_type, 'application/pdf')
 
-    def test_match_user_success(self):
-        """Test matching a user to an event successfully."""
-        response = self.client.put('/api/match_user', json={
-            'user_id': 1,
-            'event_id': 1
-        })
+    def test_generate_pdf_report(self):
+        """Test the generate_pdf_report function directly."""
+        with app.app_context():
+            response = generate_pdf_report()
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.mimetype, 'application/pdf')
+
+    def test_wrap_text(self):
+        """Test the wrap_text helper function."""
+        text = "This is a long string that should be wrapped properly."
+        max_width = 100
+
+        # Simulate ReportLab canvas to measure string width
+        canvas_obj = canvas.Canvas(BytesIO())
+        wrapped_lines = generate_pdf_report.wrap_text(text, max_width)
+
+        # Test: Check if the text is wrapped into multiple lines
+        for line in wrapped_lines:
+            self.assertLessEqual(canvas_obj.stringWidth(line, "Helvetica", 10), max_width)
+
+    def test_generate_report_csv(self):
+        """Test generate_report for CSV generation."""
+        response = self.client.get('/api/generate_report?type=csv')
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
-        self.assertEqual(data['msg'], 'Event added to volunteer list and notification sent')
-
-    def test_match_user_duplicate(self):
-        """Test matching a user to an event that is already matched."""
-        # First match
-        self.client.put('/api/match_user', json={
-            'user_id': 1,
-            'event_id': 1
-        })
-        # Try matching again
-        response = self.client.put('/api/match_user', json={
-            'user_id': 1,
-            'event_id': 1
-        })
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
-        self.assertEqual(data['msg'], 'Event already in volunteer list')
-
-    def test_match_user_not_found(self):
-        """Test matching a non-existent user to an event."""
-        response = self.client.put('/api/match_user', json={
-            'user_id': 999,
-            'event_id': 1
-        })
-        self.assertEqual(response.status_code, 404)
-        data = json.loads(response.data)
-        self.assertEqual(data['msg'], 'User not found')
-
-    def test_match_event_not_found(self):
-        """Test matching a user to a non-existent event."""
-        response = self.client.put('/api/match_user', json={
-            'user_id': 1,
-            'event_id': 999
-        })
-        self.assertEqual(response.status_code, 404)
-        data = json.loads(response.data)
-        self.assertEqual(data['msg'], 'Event not found')
+        self.assertEqual(response.content_type, 'text/csv')
+        self.assertIn(b'Volunteer', response.data)
 
 if __name__ == '__main__':
     unittest.main()
