@@ -370,24 +370,35 @@ def send_reminder_notifications():
         # print(f"Found upcoming events: {[event.name for event in upcoming_events]}")  # Print event names
 
         for event in upcoming_events:
-            event_date = datetime.strptime(event.date, '%Y-%m-%dT%H:%M:%S') if 'T' in event.date else datetime.strptime(event.date, '%Y-%m-%d')
-            # print(f"Today: {today}, Event date: {event_date.date()}, Tomorrow: {tomorrow}")
-
-            if today < event_date.date() <= tomorrow:
-                if event.assigned_users:
-                    for user in event.assigned_users:
-                        new_notification = Notification(
-                            user_id = user.id,
-                            title = "Reminder",
-                            date = current_date,
-                            message = f"Event reminder: {event.name} is coming up in 24 hours!",
-                            notif_type = "reminder"
-                        )
-                        db.session.add(new_notification)
-                        print(f"Appended notification successfully to user: {user.id}")
-                    db.session.commit()
+            # event_date = datetime.strptime(event.date, '%Y-%m-%dT%H:%M:%S') if 'T' in event.date else datetime.strptime(event.date, '%Y-%m-%d')
+            # print(f"Today: {today}, Event date: {event_date.date()}, Tomorrow: {tomorrow}")    try:
+            try:
+                if 'T' in event.date:
+                    # Try to parse with seconds, if it fails, fall back to just hours and minutes
+                    try:
+                        event_date = datetime.strptime(event.date, '%Y-%m-%dT%H:%M:%S')
+                    except ValueError:
+                        event_date = datetime.strptime(event.date, '%Y-%m-%dT%H:%M')
                 else:
-                    print(f"No assigned users for event '{event.name}'")
+                    event_date = datetime.strptime(event.date, '%Y-%m-%d')
+
+                if today < event_date.date() <= tomorrow:
+                    if event.assigned_users:
+                        for user in event.assigned_users:
+                            new_notification = Notification(
+                                user_id = user.id,
+                                title = "Reminder",
+                                date = current_date,
+                                message = f"Event reminder: {event.name} is coming up in 24 hours!",
+                                notif_type = "reminder"
+                            )
+                            db.session.add(new_notification)
+                            print(f"Appended notification successfully to user: {user.id}")
+                        db.session.commit()
+                    else:
+                        print(f"No assigned users for event '{event.name}'")
+            except ValueError as e:
+                print(f"Failed to parse event date for event '{event.name}': {event.date}. Error: {e}")
 
 # Set up scheduler to periodically check to send reminder notifications
 # To test make sure event is set to next day not same day
